@@ -7,7 +7,8 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  SECRETS_SCAN_OMIT_PATHS = ".netlify,.next/cache"
+  SECRETS_SCAN_OMIT_PATHS = ".netlify,.next/cache,.next/_next/static"
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_APP_URL"
 
 [[redirects]]
   from = "/api/*"
