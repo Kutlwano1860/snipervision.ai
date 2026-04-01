@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   title: 'TradeVision AI — Institutional-Grade Analysis From a Screenshot',
   description: 'Upload any chart screenshot. Get AI-powered technical analysis, entry signals, lot sizing, and a complete trade plan in seconds.',
   keywords: 'trading, AI analysis, forex, crypto, chart analysis, trade signals',
+  icons: {
+    icon: '/Tradingversionai.jpeg',
+    apple: '/Tradingversionai.jpeg',
+  },
 }
 
 export default function RootLayout({

@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
 
 export const dynamic = 'force-dynamic'
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+
+// In-memory cache — resets on cold start, good enough for serverless
+let memCache: { ticker: object; ts: number } | null = null
+const CACHE_MS = 60_000
 
 type SymbolDef = { pair: string; cls: string; tdSymbol: string }
 
-// Default always-shown symbols
 const DEFAULT_SYMBOLS: SymbolDef[] = [
   { pair: 'XAUUSD', cls: 'COMMODITY', tdSymbol: 'XAU/USD' },
   { pair: 'BTCUSD', cls: 'CRYPTO',    tdSymbol: 'BTC/USD' },
@@ -22,9 +19,7 @@ const DEFAULT_SYMBOLS: SymbolDef[] = [
   { pair: 'US30',   cls: 'INDEX',     tdSymbol: 'DJI'     },
 ]
 
-// Full catalogue of addable pairs — pair name → Twelve Data symbol + class
 const PAIR_CATALOGUE: Record<string, { cls: string; tdSymbol: string }> = {
-  // Forex
   'AUDUSD': { cls: 'FOREX',     tdSymbol: 'AUD/USD'  },
   'USDCAD': { cls: 'FOREX',     tdSymbol: 'USD/CAD'  },
   'USDCHF': { cls: 'FOREX',     tdSymbol: 'USD/CHF'  },
@@ -37,21 +32,16 @@ const PAIR_CATALOGUE: Record<string, { cls: string; tdSymbol: string }> = {
   'AUDCAD': { cls: 'FOREX',     tdSymbol: 'AUD/CAD'  },
   'CADJPY': { cls: 'FOREX',     tdSymbol: 'CAD/JPY'  },
   'CHFJPY': { cls: 'FOREX',     tdSymbol: 'CHF/JPY'  },
-  // Crypto
   'ETHUSD': { cls: 'CRYPTO',    tdSymbol: 'ETH/USD'  },
   'SOLUSD': { cls: 'CRYPTO',    tdSymbol: 'SOL/USD'  },
   'XRPUSD': { cls: 'CRYPTO',    tdSymbol: 'XRP/USD'  },
   'BNBUSD': { cls: 'CRYPTO',    tdSymbol: 'BNB/USD'  },
-  // Indices
   'SPX500': { cls: 'INDEX',     tdSymbol: 'SPX'      },
   'GER40':  { cls: 'INDEX',     tdSymbol: 'DAX'      },
   'UK100':  { cls: 'INDEX',     tdSymbol: 'FTSE 100' },
-  // Commodities
   'XAGUSD': { cls: 'COMMODITY', tdSymbol: 'XAG/USD'  },
   'USOIL':  { cls: 'COMMODITY', tdSymbol: 'WTI/USD'  },
 }
-
-const CACHE_DURATION_MS = 60_000 // 60 seconds
 
 function buildTicker(symbols: SymbolDef[], quoteData: Record<string, any>) {
   return symbols.map(item => {
@@ -67,7 +57,7 @@ function buildTicker(symbols: SymbolDef[], quoteData: Record<string, any>) {
       else formattedPrice = price.toFixed(4)
     }
 
-    const direction     = change !== null ? (change >= 0 ? 'up' : 'down') : 'up'
+    const direction = change !== null ? (change >= 0 ? 'up' : 'down') : 'up'
     const formattedChange = change !== null
       ? `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`
       : '0.00%'
@@ -101,7 +91,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Twelve Data API key not configured' }, { status: 500 })
     }
 
-    // Extra pairs passed by the watchlist page (?extra=AUDUSD,ETHUSD)
     const extraParam = request.nextUrl.searchParams.get('extra') || ''
     const extraPairs = extraParam
       .split(',')
@@ -111,26 +100,12 @@ export async function GET(request: NextRequest) {
 
     const allSymbols = [...DEFAULT_SYMBOLS, ...extraPairs]
 
-    // 1. Check Supabase cache — only for the default set (no extra pairs)
-    if (!extraPairs.length) {
-      const { data: cached, error: cacheError } = await supabase
-        .from('market_cache')
-        .select('*')
-        .order('fetched_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      const isStale = !cached || cacheError ||
-        (Date.now() - new Date(cached.fetched_at).getTime()) > CACHE_DURATION_MS
-
-      if (!isStale && cached?.data) {
-        return NextResponse.json({ ticker: cached.data, cached: true }, {
-          headers: { 'Cache-Control': 's-maxage=30, stale-while-revalidate=60' },
-        })
-      }
+    // Use in-memory cache for default symbol set only
+    if (!extraPairs.length && memCache && Date.now() - memCache.ts < CACHE_MS) {
+      return NextResponse.json({ ticker: memCache.ticker, catalogue: Object.keys(PAIR_CATALOGUE), cached: true })
     }
 
-    // 2. Fetch from Twelve Data
+    // Fetch from Twelve Data
     const symbolList = allSymbols.map(s => s.tdSymbol).join(',')
     const quoteRes   = await fetch(
       `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbolList)}&apikey=${apiKey}`
@@ -146,19 +121,9 @@ export async function GET(request: NextRequest) {
 
     const ticker = buildTicker(allSymbols, quoteData)
 
-    // 3. Cache only for default symbol set
+    // Store in memory cache for default set
     if (!extraPairs.length) {
-      await supabase.from('market_cache').insert({ data: ticker, fetched_at: new Date().toISOString() })
-
-      const { data: oldRows } = await supabase
-        .from('market_cache')
-        .select('id')
-        .order('fetched_at', { ascending: false })
-        .range(5, 1000)
-
-      if (oldRows && oldRows.length > 0) {
-        await supabase.from('market_cache').delete().in('id', oldRows.map((r: any) => r.id))
-      }
+      memCache = { ticker, ts: Date.now() }
     }
 
     return NextResponse.json({ ticker, catalogue: Object.keys(PAIR_CATALOGUE) }, {

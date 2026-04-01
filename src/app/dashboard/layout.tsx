@@ -144,12 +144,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* App Nav */}
       <nav className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-7 h-14 border-b border-[var(--border)] bg-[rgba(8,8,8,0.96)] backdrop-blur-xl">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 text-[15px] font-extrabold tracking-tight">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="text-[var(--green)]">
-            <polyline points="1,14 6,8 10,11 15,4 19,7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="hidden sm:inline">TradeVision AI</span>
-          <span className="sm:hidden text-[var(--green)]">TV</span>
+        <Link href="/" className="flex items-center gap-2">
+          <img src="/Tradingversionai.jpeg" alt="TradeVision AI" className="w-8 h-8 rounded-lg object-cover" />
+          <span className="hidden sm:inline text-[15px] font-extrabold tracking-tight">TradeVision AI</span>
         </Link>
 
         {/* Tabs — desktop only */}
