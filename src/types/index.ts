@@ -19,9 +19,16 @@ export type MarketType =
   | 'Stocks' | 'Indices' | 'Commodities'
 
 export type Strategy =
-  | 'Auto Select' | 'Smart Money (SMC)' | 'Price Action'
-  | 'Classical TA' | 'Trend Following' | 'Mean Reversion'
-  | 'MNSR' | 'ICC ICT 714'
+  | 'ICT'
+  | 'SMC'
+  | 'Support & Resistance'
+  | 'Supply & Demand'
+  | 'CRT'
+  | 'Price Action MS'
+  | 'Top Down Analysis'
+  | 'Mix'
+
+export type TradingStyle = 'Scalper' | 'Day Trader' | 'Swing Trader'
 
 export type Session =
   | 'Auto Detect' | 'London' | 'New York'
@@ -50,6 +57,7 @@ export interface AnalysisSettings {
   market: MarketType
   strategy: Strategy
   riskAppetite: 'Conservative' | 'Moderate' | 'Aggressive'
+  entryMode: 'Aggressive' | 'Standard' | 'Comfortable'
   session: Session
   accountType: AccountType
   tradingCurrency: Currency

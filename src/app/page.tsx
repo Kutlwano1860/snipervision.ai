@@ -83,25 +83,26 @@ function Nav() {
   }, [])
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between px-12 h-16 border-b border-[var(--border)] bg-[rgba(8,8,8,0.96)] backdrop-blur-xl">
-      <div className="flex items-center gap-2 text-[17px] font-bold">
-        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" className="text-[var(--green)]">
+    <nav className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-8 md:px-12 h-14 md:h-16 border-b border-[var(--border)] bg-[rgba(8,8,8,0.96)] backdrop-blur-xl">
+      <div className="flex items-center gap-2 text-[15px] md:text-[17px] font-bold shrink-0">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="text-[var(--green)]">
           <polyline points="1,14 6,8 10,11 15,4 19,7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        TradeVision AI
+        <span className="hidden sm:inline">TradeVision AI</span>
+        <span className="sm:hidden text-[var(--green)]">TV</span>
       </div>
-      <div className="flex items-center gap-7">
+      <div className="hidden md:flex items-center gap-7">
         <a href="#features" className="text-[13px] text-[#777] hover:text-white transition-colors">Features</a>
         <a href="#how" className="text-[13px] text-[#777] hover:text-white transition-colors">How It Works</a>
         <a href="#pricing" className="text-[13px] text-[#777] hover:text-white transition-colors">Pricing</a>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {loggedIn ? (
-          <Link href="/dashboard" className="btn-primary text-[13px] px-5 py-2 rounded-lg">Go to Dashboard →</Link>
+          <Link href="/dashboard" className="btn-primary text-[12px] sm:text-[13px] px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg">Go to Dashboard →</Link>
         ) : (
           <>
-            <Link href="/login" className="btn-outline text-[13px] px-5 py-2 rounded-lg">Login</Link>
-            <Link href="/register" className="btn-primary text-[13px] px-5 py-2 rounded-lg">Get Started</Link>
+            <Link href="/login" className="btn-outline text-[12px] sm:text-[13px] px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg">Login</Link>
+            <Link href="/register" className="btn-primary text-[12px] sm:text-[13px] px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg">Get Started</Link>
           </>
         )}
       </div>
@@ -190,7 +191,7 @@ function PricingCard({ plan }: { plan: SubscriptionPlan }) {
   const color = tierColors[plan.tier] || '#fff'
 
   return (
-    <div className={`relative flex flex-col bg-[var(--surface)] border rounded-[18px] p-7 transition-all duration-300 hover:-translate-y-1
+    <div className={`relative flex flex-col bg-[var(--surface)] border rounded-[18px] p-5 md:p-7 transition-all duration-300 hover:-translate-y-1
       ${plan.popular ? 'border-[rgba(245,158,11,0.4)] bg-gradient-to-b from-[rgba(245,158,11,0.05)] to-[var(--surface)]' : 'border-[var(--border)]'}`}>
       {plan.popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--amber)] text-black text-[10px] font-extrabold px-4 py-1 rounded-full whitespace-nowrap tracking-wider">
@@ -311,18 +312,18 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="px-12 py-24 bg-[var(--bg2)] border-t border-[var(--border)]">
-        <div className="text-center mb-14">
-          <h2 className="text-[clamp(30px,4vw,46px)] font-extrabold tracking-tight mb-3">Simple, Transparent Pricing</h2>
-          <p className="text-[15px] text-[#777]">Start free. Upgrade when you need more power.</p>
+      <section id="pricing" className="px-4 sm:px-8 md:px-12 py-16 md:py-24 bg-[var(--bg2)] border-t border-[var(--border)]">
+        <div className="text-center mb-10 md:mb-14">
+          <h2 className="text-[clamp(28px,4vw,46px)] font-extrabold tracking-tight mb-3">Simple, Transparent Pricing</h2>
+          <p className="text-[14px] md:text-[15px] text-[#777]">Start free. Upgrade when you need more power.</p>
         </div>
-        <div className="grid grid-cols-4 gap-4 max-w-[1080px] mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 max-w-[1080px] mx-auto">
           {PLANS.map(plan => <PricingCard key={plan.tier} plan={plan} />)}
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[var(--border)] px-12 py-10 flex justify-between items-start">
+      <footer className="border-t border-[var(--border)] px-4 sm:px-8 md:px-12 py-10 flex flex-col sm:flex-row justify-between items-start gap-6">
         <div>
           <div className="flex items-center gap-2 text-[15px] font-bold mb-2">
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="text-[var(--green)]">
@@ -334,10 +335,24 @@ export default function LandingPage() {
             TradeVision AI provides educational analysis only. This is not financial advice. Trading involves substantial risk of loss and is not suitable for every investor. Past performance is not indicative of future results.
           </p>
         </div>
-        <div className="flex gap-5">
-          {['Features','Pricing','Terms','Privacy'].map(l => (
-            <span key={l} className="text-[12px] text-[#777] cursor-pointer hover:text-white transition-colors">{l}</span>
-          ))}
+        <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 text-[12px]">
+          <div className="flex flex-col gap-2">
+            <div className="text-[9px] font-mono-tv font-bold tracking-widest text-[#555] mb-1">PRODUCT</div>
+            <a href="#features" className="text-[#777] hover:text-white transition-colors">Features</a>
+            <a href="#pricing" className="text-[#777] hover:text-white transition-colors">Pricing</a>
+            <Link href="/how-to-use" className="text-[#777] hover:text-white transition-colors">How to Use</Link>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="text-[9px] font-mono-tv font-bold tracking-widest text-[#555] mb-1">LEGAL</div>
+            <Link href="/terms" className="text-[#777] hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="text-[#777] hover:text-white transition-colors">Privacy Policy</Link>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="text-[9px] font-mono-tv font-bold tracking-widest text-[#555] mb-1">CONTACT</div>
+            <a href="mailto:support@tradevisionsai.com" className="text-[#777] hover:text-white transition-colors">support@tradevisionsai.com</a>
+            <a href="https://discord.gg/tradevisionsai" target="_blank" rel="noreferrer" className="text-[#777] hover:text-white transition-colors">Discord Community</a>
+            <a href="https://instagram.com/tradevisionsai" target="_blank" rel="noreferrer" className="text-[#777] hover:text-white transition-colors">Instagram</a>
+          </div>
         </div>
       </footer>
       <div className="text-center text-[11px] text-[#444] py-4 border-t border-[var(--border)]">

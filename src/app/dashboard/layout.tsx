@@ -6,28 +6,29 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/lib/store'
-import { CURRENCIES, TIER_LIMITS, TIER_ICONS } from '@/lib/constants'
+import { CURRENCIES, TIER_LIMITS, TIER_ICONS, DEFAULT_HOME_CURRENCY, DEFAULT_TRADING_CURRENCY, DEFAULT_ACCOUNT_TYPE, DEFAULT_ACCOUNT_BALANCE } from '@/lib/constants'
 import type { Currency, Tier } from '@/types'
 
 const TIER_COLORS: Record<Tier, string> = {
-  free:     'rgba(107,114,128,0.12)',
-  premium:  'rgba(59,130,246,0.12)',
+  free: 'rgba(107,114,128,0.12)',
+  premium: 'rgba(59,130,246,0.12)',
   platinum: 'rgba(167,139,250,0.12)',
-  diamond:  'rgba(245,158,11,0.12)',
+  diamond: 'rgba(245,158,11,0.12)',
 }
 const TIER_TEXT: Record<Tier, string> = {
   free: '#6b7280', premium: '#3b82f6', platinum: '#a78bfa', diamond: '#f59e0b',
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const router   = useRouter()
+  const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
-  const { profile, setProfile, sessionTradingCurrency, setSessionTradingCurrency } = useAppStore() // eslint-disable-line
+  const { profile, setProfile, clearSession, sessionTradingCurrency, setSessionTradingCurrency, setDailyUsed } = useAppStore() // eslint-disable-line
   const [showTacModal, setShowTacModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [selectedTier, setSelectedTier] = useState<Tier>('premium')
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
   // Fallback display name sourced from auth metadata when profile row not loaded yet
   const [authDisplayName, setAuthDisplayName] = useState<string>('')
@@ -43,87 +44,119 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  useEffect(() => {
-    async function loadProfile() {
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
+  async function loadProfile() {
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-      // No valid session at all — force sign out and redirect to login
-      if (authError || !user) {
-        await supabase.auth.signOut()
-        setProfile(null)
-        router.replace('/login')
-        return
-      }
+    // No valid session at all — force sign out and redirect to login
+    if (authError || !user) {
+      await supabase.auth.signOut()
+      setProfile(null)
+      router.replace('/login')
+      return
+    }
 
-      // Store auth-level name/email as fallback for avatar before DB responds
-      const metaName  = user.user_metadata?.name as string | undefined
-      const metaEmail = user.email || ''
-      setAuthDisplayName(metaName || metaEmail)
+    // Store auth-level name/email as fallback for avatar before DB responds
+    const metaName = user.user_metadata?.name as string | undefined
+    const metaEmail = user.email || ''
+    setAuthDisplayName(metaName || metaEmail)
 
-      const { data, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+    const { data, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
 
-      if (data) {
-        setProfile(data as any)
-      } else if (profileError) {
-        // Profile row missing — auto-create so the app stays usable
-        const { data: newProfile } = await supabase
+    if (data) {
+      // Normalise tier to lowercase so manual Supabase edits ('Platinum') still match
+      setProfile({ ...data, tier: (data.tier as string)?.toLowerCase() } as any)
+      // Sync daily counter — reset to 0 if it's a new day, else use DB value
+      const today2 = new Date().toISOString().split('T')[0]
+      setDailyUsed(data.last_analysis_date === today2 ? (data.daily_analyses_used ?? 0) : 0)
+    } else if (profileError) {
+      // PGRST116 = "no rows found" — profile row genuinely missing, create it
+      // Any other code = DB/network error — don't sign out, just show nothing
+      if (profileError.code === 'PGRST116') {
+        const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .insert({
-            id:                       user.id,
-            email:                    metaEmail,
-            name:                     metaName || metaEmail.split('@')[0],
-            tier:                     'free',
-            daily_analyses_used:      0,
-            home_currency:            'ZAR',
-            default_trading_currency: 'GBP',
-            account_type:             'micro',
-            account_balance:          0,
+            id: user.id,
+            email: metaEmail,
+            name: metaName || metaEmail.split('@')[0],
+            tier: 'free',
+            daily_analyses_used: 0,
+            home_currency: DEFAULT_HOME_CURRENCY,
+            default_trading_currency: DEFAULT_TRADING_CURRENCY,
+            account_type: DEFAULT_ACCOUNT_TYPE,
+            account_balance: DEFAULT_ACCOUNT_BALANCE,
           })
           .select()
           .single()
-        if (newProfile) setProfile(newProfile as any)
+
+        if (newProfile) {
+          setProfile(newProfile as any)
+        } else {
+          console.error('Profile creation failed:', createError)
+          // Insert failed (e.g. RLS rejected it) — profile truly can't be created
+          await supabase.auth.signOut()
+          setProfile(null)
+          toast.error('Account setup incomplete. Please sign up again.')
+          router.replace('/register')
+        }
+      } else {
+        console.error('Profile load error (non-fatal):', profileError)
       }
     }
-    loadProfile()
-  }, [])
+  }
+
+  // Load on mount
+  useEffect(() => { loadProfile() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch profile when the user comes back to this tab (e.g. after changing tier in Supabase)
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') loadProfile()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    setProfile(null)
+    clearSession()
     router.push('/')
   }
 
   const tier = (profile?.tier || 'free') as Tier
 
   const tabs = [
-    { label: 'Analyse',   href: '/dashboard' },
-    { label: 'Journal',   href: '/dashboard/journal' },
+    { label: 'Analyse', href: '/dashboard' },
+    { label: 'Journal', href: '/dashboard/journal' },
+    { label: 'History', href: '/dashboard/history' },
+    { label: 'Community', href: '/dashboard/community' },
     { label: 'Watchlist', href: '/dashboard/watchlist' },
+    { label: 'Broker', href: '/dashboard/broker' },
   ]
 
-  const tacCurrencies: Currency[] = ['USD','GBP','EUR','AUD','ZAR','CAD','JPY','CHF','NZD']
+  const tacCurrencies: Currency[] = ['USD', 'GBP', 'EUR', 'AUD', 'ZAR', 'CAD', 'JPY', 'CHF', 'NZD']
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* App Nav */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between px-7 h-14 border-b border-[var(--border)] bg-[rgba(8,8,8,0.96)] backdrop-blur-xl">
+      <nav className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-7 h-14 border-b border-[var(--border)] bg-[rgba(8,8,8,0.96)] backdrop-blur-xl">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 text-[15px] font-extrabold tracking-tight">
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="text-[var(--green)]">
-            <polyline points="1,14 6,8 10,11 15,4 19,7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <polyline points="1,14 6,8 10,11 15,4 19,7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          TradeVision AI
+          <span className="hidden sm:inline">TradeVision AI</span>
+          <span className="sm:hidden text-[var(--green)]">TV</span>
         </Link>
 
-        {/* Tabs */}
-        <div className="flex gap-0.5 bg-[var(--surface)] border border-[var(--border)] rounded-[8px] p-0.5">
+        {/* Tabs — desktop only */}
+        <div className="hidden md:flex gap-0.5 bg-[var(--surface)] border border-[var(--border)] rounded-[8px] p-0.5">
           {tabs.map(t => (
             <Link key={t.href} href={t.href}
-              className={`px-4 py-1.5 rounded-[7px] text-[12px] font-semibold transition-all
+              className={`px-3 py-1.5 rounded-[7px] text-[11px] font-semibold transition-all whitespace-nowrap
                 ${pathname === t.href
                   ? 'bg-[var(--surface3)] text-white border border-[var(--border2)]'
                   : 'text-[#777] hover:text-white'}`}>
@@ -133,9 +166,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-2">
-          {/* Currency indicator */}
-          <div className="flex items-center gap-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-md px-2.5 py-1 text-[10px] font-mono-tv">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Currency indicator — desktop only */}
+          <div className="hidden md:flex items-center gap-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-md px-2.5 py-1 text-[10px] font-mono-tv">
             <span className="text-[#777]">
               {CURRENCIES.find(c => c.code === (profile?.home_currency || 'ZAR'))?.flag} {profile?.home_currency || 'ZAR'}
             </span>
@@ -146,9 +179,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
           </div>
 
-          {/* Tier badge */}
+          {/* Refresh button */}
+          <button
+            onClick={async () => {
+              setRefreshing(true)
+              await Promise.all([
+                loadProfile(),
+                fetch('/api/market', { cache: 'no-store' })
+              ])
+              window.dispatchEvent(new CustomEvent('tv:reset'))
+              setRefreshing(false)
+              toast.success('Page refreshed!')
+            }}
+            disabled={refreshing}
+            title="Refresh profile & tier"
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[#777] hover:text-white hover:border-[var(--border2)] hover:bg-[var(--surface2)] transition-all disabled:opacity-40"
+            style={{ fontSize: 13 }}>
+            <span className={refreshing ? 'animate-spin inline-block' : ''}>↺</span>
+          </button>
+
+          {/* Tier badge — desktop only */}
           <button onClick={() => setShowUpgradeModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono-tv tracking-wider border"
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono-tv tracking-wider border"
             style={{ background: TIER_COLORS[tier], color: TIER_TEXT[tier], borderColor: TIER_TEXT[tier] + '44' }}>
             {TIER_ICONS[tier]} {tier.toUpperCase()}
           </button>
@@ -161,20 +213,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {(profile?.name || authDisplayName || '?').charAt(0).toUpperCase()}
             </div>
             {showProfileMenu && (() => {
-              const limit     = TIER_LIMITS[tier]
-              const used      = profile?.daily_analyses_used ?? 0
+              const limit = TIER_LIMITS[tier]
+              const used = profile?.daily_analyses_used ?? 0
               const usedToday = profile?.last_analysis_date === new Date().toISOString().split('T')[0] ? used : 0
-              const pct       = limit >= 999 ? 100 : Math.min(100, Math.round((usedToday / limit) * 100))
-              const barColor  = pct >= 90 ? 'var(--red)' : pct >= 60 ? 'var(--amber)' : 'var(--green)'
-              const homeCurr  = CURRENCIES.find(c => c.code === (profile?.home_currency || 'ZAR'))
+              const pct = limit >= 999 ? 100 : Math.min(100, Math.round((usedToday / limit) * 100))
+              const barColor = pct >= 90 ? 'var(--red)' : pct >= 60 ? 'var(--amber)' : 'var(--green)'
+              const homeCurr = CURRENCIES.find(c => c.code === (profile?.home_currency || 'ZAR'))
               const tradeCurr = CURRENCIES.find(c => c.code === (profile?.default_trading_currency || 'GBP'))
-              const balance   = profile?.account_balance ?? 0
+              const balance = profile?.account_balance ?? 0
               const memberSince = profile?.created_at
                 ? new Date(profile.created_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
                 : null
 
               return (
-                <div className="absolute right-0 top-10 bg-[var(--surface)] border border-[var(--border2)] rounded-[14px] shadow-2xl py-1.5 w-64 z-50 animate-fade-up">
+                <div className="absolute right-0 top-10 bg-[var(--surface)] border border-[var(--border2)] rounded-[14px] shadow-2xl py-1.5 w-64 max-w-[calc(100vw-1rem)] z-50 animate-fade-up">
                   {/* Identity */}
                   <div className="px-4 pt-3 pb-3 border-b border-[var(--border)]">
                     <div className="flex items-center justify-between mb-0.5">
@@ -249,9 +301,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
 
       {/* Page content */}
-      <main className="flex-1">
+      <main className="flex-1 pb-16 md:pb-0">
         {children}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgba(8,8,8,0.96)] border-t border-[var(--border)] backdrop-blur-xl safe-area-pb">
+        <div className="flex overflow-x-auto scrollbar-hide">
+          {[
+            { label: 'Analyse', href: '/dashboard', icon: '⚡' },
+            { label: 'Journal', href: '/dashboard/journal', icon: '📒' },
+            { label: 'History', href: '/dashboard/history', icon: '🕐' },
+            { label: 'Community', href: '/dashboard/community', icon: '💬' },
+            { label: 'Watchlist', href: '/dashboard/watchlist', icon: '📈' },
+            { label: 'Broker', href: '/dashboard/broker', icon: '⚙️' },
+          ].map(t => (
+            <Link key={t.href} href={t.href}
+              className={`flex-1 min-w-[56px] flex flex-col items-center py-2.5 gap-0.5 transition-colors
+                ${pathname === t.href ? 'text-[var(--green)]' : 'text-[#555]'}`}>
+              <span className="text-[17px] leading-none">{t.icon}</span>
+              <span className="text-[9px] font-semibold tracking-wide whitespace-nowrap">{t.label}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
 
       {/* Trading Account Currency Modal */}
       {showTacModal && (
@@ -294,8 +367,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <h3 className="text-[22px] font-extrabold tracking-tight mb-2">🚀 Unlock More Power</h3>
             <p className="text-[12px] text-[#777] mb-5">Upgrade to access deeper analysis, live market data, macro intelligence, and more.</p>
             <div className="grid grid-cols-2 gap-2 mb-4">
-              {(['premium','platinum','diamond','free'] as Tier[]).map(t => {
-                const prices: Record<Tier,string> = { free:'$0', premium:'$19.99', platinum:'$49.99', diamond:'$149.99' }
+              {(['premium', 'platinum', 'diamond', 'free'] as Tier[]).map(t => {
+                const prices: Record<Tier, string> = { free: '$0', premium: '$19.99', platinum: '$49.99', diamond: '$149.99' }
                 return (
                   <button key={t} onClick={() => setSelectedTier(t)}
                     className={`p-3 border-2 rounded-[10px] text-center transition-all

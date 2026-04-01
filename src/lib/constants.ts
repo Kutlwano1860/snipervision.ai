@@ -1,4 +1,10 @@
-import type { Currency, CurrencyConfig, SubscriptionPlan, Tier } from '@/types'
+import type { Currency, AccountType, CurrencyConfig, SubscriptionPlan, Tier } from '@/types'
+
+// ── New-profile defaults (used wherever a profile row is auto-created) ──
+export const DEFAULT_HOME_CURRENCY: Currency    = 'ZAR'
+export const DEFAULT_TRADING_CURRENCY: Currency = 'GBP'
+export const DEFAULT_ACCOUNT_TYPE: AccountType  = 'micro'
+export const DEFAULT_ACCOUNT_BALANCE            = 0
 
 // ── Tier Limits ──
 export const TIER_LIMITS: Record<Tier, number> = {
@@ -73,14 +79,13 @@ export const PLANS: SubscriptionPlan[] = [
     ctaText: 'Get Started',
     features: [
       { text: '3 analyses per day', included: true },
-      { text: 'Basic technical analysis', included: true },
-      { text: 'Entry + Stop Loss only', included: true },
       { text: 'Market bias + confidence score', included: true },
+      { text: 'Entry + Stop Loss', included: true },
+      { text: 'Basic technical analysis', included: true },
       { text: 'Single timeframe only', included: true },
-      { text: 'Community feed (read only)', included: true },
-      { text: 'No TP levels', included: false },
-      { text: 'No lot sizing suggestions', included: false },
-      { text: 'No live market data', included: false },
+      { text: 'TP levels', included: false },
+      { text: 'Lot sizing suggestions', included: false },
+      { text: 'Fundamental / macro analysis', included: false },
     ],
   },
   {
@@ -92,14 +97,13 @@ export const PLANS: SubscriptionPlan[] = [
     ctaText: 'Start 7-Day Free Trial',
     features: [
       { text: '20 analyses per day', included: true },
-      { text: 'Full technical analysis', included: true },
       { text: '3 Take Profit levels + R:R ratios', included: true },
-      { text: 'Smart lot sizing suggestions', included: true },
-      { text: 'Home + trading currency output', included: true },
-      { text: 'Economic calendar event alerts', included: true },
-      { text: 'Pattern library with visuals', included: true },
-      { text: 'Voice analysis output', included: true },
-      { text: 'Trade journal + CSV export', included: true },
+      { text: 'Smart lot sizing for your account', included: true },
+      { text: 'Full technical, patterns & key levels', included: true },
+      { text: 'Setup quality grade + confluence score', included: true },
+      { text: 'Kill zone + psychological levels', included: true },
+      { text: 'Economic event risk alerts', included: true },
+      { text: 'Trade journal', included: true },
     ],
   },
   {
@@ -112,15 +116,14 @@ export const PLANS: SubscriptionPlan[] = [
     popular: true,
     features: [
       { text: 'Unlimited analyses', included: true, highlight: true },
-      { text: 'Multi-timeframe confluence (3 TFs)', included: true },
-      { text: 'Full fundamental + macro analysis', included: true },
-      { text: 'Smart Money Concepts deep analysis', included: true },
-      { text: 'Live DXY + sentiment widget', included: true },
-      { text: 'Prop Firm Mode', included: true },
-      { text: 'Full trade plan builder', included: true },
-      { text: 'Chart comparison mode', included: true },
-      { text: 'Community signal feed (post + vote)', included: true },
-      { text: 'Weekly AI performance review', included: true },
+      { text: 'Multi-timeframe confluence (up to 3 charts)', included: true },
+      { text: 'Full fundamental analysis', included: true },
+      { text: 'Macro environment analysis', included: true },
+      { text: 'Smart Money Concepts (order blocks, FVGs, BOS)', included: true },
+      { text: 'Liquidity context analysis', included: true },
+      { text: 'Trade management plan', included: true },
+      { text: 'Alternative scenario planning', included: true },
+      { text: 'HTF storyline narrative', included: true },
     ],
   },
   {
@@ -132,15 +135,13 @@ export const PLANS: SubscriptionPlan[] = [
     ctaText: 'Start 14-Day Free Trial',
     features: [
       { text: 'Everything in Platinum', included: true },
-      { text: 'Real-time scanning (50+ assets)', included: true },
-      { text: 'Broker execution integration', included: true },
-      { text: 'Custom AI strategy training', included: true },
-      { text: 'Institutional flow + dark pool data', included: true },
-      { text: 'On-chain whale tracking (crypto)', included: true },
-      { text: 'Multi-chart workspace (4 charts)', included: true },
-      { text: 'Direct API access', included: true },
-      { text: 'White-label for educators', included: true },
-      { text: 'Dedicated account manager 24/7', included: true },
+      { text: 'Community signal feed — post, like, discuss', included: true },
+      { text: 'Strategy leaderboard — platform-wide rankings', included: true },
+      { text: 'AI daily market brief — session outlook on every scan', included: true },
+      { text: 'Setup history — review every scan with outcome tracking', included: true },
+      { text: 'Broker connection — balance sync for lot sizing', included: true },
+      { text: 'Priority support', included: true },
+      { text: 'Early access to all new features', included: true },
     ],
   },
 ]

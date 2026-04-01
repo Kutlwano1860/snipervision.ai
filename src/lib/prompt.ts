@@ -3,153 +3,115 @@ import { getCurrency, convertToHome } from './constants'
 
 // ── Strategy-specific instructions injected into the prompt ──
 const STRATEGY_INSTRUCTIONS: Record<string, string> = {
-  'Smart Money (SMC)': `
+  'ICT': `
+STRATEGY FOCUS — ICT (Inner Circle Trader):
+1. DEALING RANGE: Mark most recent swing high and swing low. Equilibrium = 50%. Premium = above 50% (sell zone), Discount = below 50% (buy zone).
+2. OTE ZONE: Fibonacci retracement 61.8%–79% from the last significant swing. Longs only in Discount OTE, Shorts only in Premium OTE.
+3. ORDER BLOCKS: Last down-close candle before a bullish impulse (bullish OB) or last up-close candle before bearish impulse (bearish OB). These are the institutional entry zones.
+4. FAIR VALUE GAPS (FVG): 3-candle imbalances. Identify if they are in Premium or Discount.
+5. KILL ZONES: London Kill Zone 07:00–10:00 GMT, New York Kill Zone 12:00–15:00 GMT, London Close 15:00–17:00 GMT, Asian Accumulation 00:00–04:00 GMT.
+6. LIQUIDITY: Identify PDH, PDL, Previous Week High/Low. Price is drawn to these levels.
+7. SETUP: HTF bias first → wait for liquidity sweep → enter on OTE retracement into OB/FVG during a kill zone.
+- Entry: At the OTE zone (61.8–79% Fib) inside an Order Block during a kill zone
+- SL: Below the OB (longs) or above the OB (shorts)
+- TP: Next HTF liquidity pool (PDH/PDL or dealing range extremes)`,
+
+  'SMC': `
 STRATEGY FOCUS — SMART MONEY CONCEPTS (SMC):
-- Identify institutional order flow: where did smart money accumulate or distribute?
-- Map all Order Blocks (OB): last bearish candle before a bullish impulse / last bullish candle before a bearish impulse
-- Identify all Fair Value Gaps (FVG / imbalances): 3-candle formation with a gap between candle 1 high and candle 3 low (bullish) or candle 1 low and candle 3 high (bearish)
-- Mark Break of Structure (BOS) and Change of Character (CHOCH): BOS confirms continuation, CHOCH signals reversal
-- Identify Liquidity pools: equal highs/lows, previous session highs/lows, round numbers where stop losses cluster
-- Note if liquidity was swept (stop hunt) before the expected move
-- Entry should be at a confirmed OB or FVG confluence, not chasing price`,
+1. INSTITUTIONAL ORDER FLOW: Identify where smart money accumulated (demand) or distributed (supply).
+2. ORDER BLOCKS (OB): Last bearish candle before a bullish impulse = bullish OB. Last bullish candle before a bearish impulse = bearish OB. Mark the entire candle body as the zone.
+3. FAIR VALUE GAPS (FVG / Imbalance): 3-candle structure where candle 1 high and candle 3 low don't overlap (bullish FVG) or candle 1 low and candle 3 high don't overlap (bearish FVG). Price is drawn back to fill these.
+4. BREAK OF STRUCTURE (BOS): Higher high or lower low confirms continuation. Mark each BOS.
+5. CHANGE OF CHARACTER (CHOCH): First BOS in opposite direction after a swing — signals potential reversal.
+6. LIQUIDITY POOLS: Equal highs, equal lows, previous session highs/lows, round numbers. Identify if liquidity was swept (stop hunt) before the expected move.
+7. PREMIUM / DISCOUNT: Use 50% of the most recent swing range. Buy in Discount OBs, Sell in Premium OBs.
+- Entry: At a confirmed OB or FVG with structure confluence — never chase price
+- SL: Below the OB low (longs) / above the OB high (shorts)
+- TP: Next OB/FVG in the opposite direction or liquidity pool`,
 
-  'ICC ICT 714': `
-STRATEGY FOCUS — ICC ICT 714 (Inner Circle Trader Methodology):
-CORE CONCEPTS TO IDENTIFY:
-1. DEALING RANGE: Mark the most recent swing high and swing low. Equilibrium = 50% level. Premium = above 50%, Discount = below 50%
-2. OPTIMAL TRADE ENTRY (OTE): Look for retracements into the 61.8%–79% Fibonacci level (the "OTE zone") from the last significant swing. Long setups require price in Discount, short setups in Premium
-3. ORDER BLOCKS: Identify the last down-close candle before a bullish impulse (bullish OB) or last up-close candle before bearish impulse (bearish OB). These are institutional entry zones
-4. FAIR VALUE GAPS: 3-candle imbalances — price will be drawn to fill them. Note if the FVG is in Premium or Discount
-5. KILL ZONES (high-probability time windows):
-   - London Kill Zone: 02:00–05:00 EST (07:00–10:00 GMT)
-   - New York Kill Zone: 07:00–10:00 EST (12:00–15:00 GMT)
-   - London Close: 10:00–12:00 EST (15:00–17:00 GMT)
-   - Asian Accumulation: 20:00–00:00 EST
-6. LIQUIDITY: Previous Day High (PDH), Previous Day Low (PDL), Previous Week High/Low, Previous Month High/Low — price is drawn to these levels
-7. ICT 714 SETUP:
-   - Step 1: Identify the higher timeframe bias (HTF bias)
-   - Step 2: Wait for a CHOCH on a lower timeframe to confirm reversal
-   - Step 3: Look for price to return to an OB or FVG in the OTE zone
-   - Step 4: Entry on confirmation candle, SL below the OB (for longs) or above OB (for shorts)
-   - Step 5: Target the opposing liquidity pool
-Entry is ONLY valid when OTE + OB/FVG + Kill Zone + HTF bias all align`,
+  'Support & Resistance': `
+STRATEGY FOCUS — SUPPORT & RESISTANCE:
+1. KEY LEVELS: Mark all major horizontal levels where price has previously reversed or consolidated. Weight levels by: number of touches (3+ = strong), timeframe (daily/weekly > intraday), how long ago (recent = stronger).
+2. LEVEL TYPES: Hard resistance (multiple rejections), Hard support (multiple bounces), Broken resistance turned support (R/S flip), Broken support turned resistance (S/R flip).
+3. ZONE PRECISION: Levels are zones, not exact lines. Mark the body-close cluster, not wicks. A zone is typically 10–30 pips wide.
+4. CONFLUENCE: A level is significantly stronger when it coincides with a round number, Fibonacci level, moving average, or previous high/low.
+5. ENTRY APPROACH: Wait for price to reach the level, then look for rejection candles (pin bar, engulfing, inside bar) before entering. Do NOT enter as price is approaching — wait for the touch and reaction.
+6. INVALIDATION: A level is broken when price closes beyond it with momentum, not just wicks through it.
+- Entry: On confirmed rejection at a key level (look for a 2-candle confirmation)
+- SL: Beyond the level by ATR or recent swing
+- TP: Next major opposing level`,
 
-  'Price Action': `
-STRATEGY FOCUS — PRICE ACTION:
-- Focus on pure candlestick patterns and price structure without indicators
-- Identify: Pin Bars, Inside Bars, Engulfing patterns, Doji, Hammer/Shooting Star
-- Mark swing highs and lows to define trend structure
-- Entry should be on a candlestick confirmation signal at a key level (support/resistance)
-- Stop loss goes below the signal candle or key level
-- Confluence: level + pattern + trend direction = higher probability setup`,
+  'Supply & Demand': `
+STRATEGY FOCUS — SUPPLY & DEMAND:
+1. ZONE IDENTIFICATION: Supply zone = area where price left quickly with a bearish impulse (imbalance, institutions selling). Demand zone = area where price left quickly with a bullish impulse (institutions buying). The impulse candle should be strong and decisive.
+2. ZONE FRESHNESS: A fresh zone has NOT been revisited since it was formed. The first return to a zone is highest probability. After 2–3 tests, a zone is weakened.
+3. ZONE QUALITY: Strong zones are: (a) created from a V-shaped reversal, (b) formed during a kill zone/news event, (c) have a strong base (tight consolidation before the impulse), (d) have significant distance from current price (space to run).
+4. PROXIMAL vs DISTAL: Proximal line = price closest to current price (entry trigger). Distal line = price furthest from current price (SL reference). Enter at proximal, stop behind distal.
+5. TIMEFRAME: Higher timeframe supply/demand zones dominate. D1/W1 zones override H1/H4 zones. Always trade LTF setups in the direction of HTF zones.
+6. CONFIRMATION: Do not enter blindly. Wait for a reaction candle or momentum shift at the proximal line.
+- Entry: Limit order at the proximal edge of the zone, or market entry on rejection confirmation
+- SL: 5–10 pips beyond the distal line of the zone
+- TP: Next opposing supply or demand zone`,
 
-  'Classical TA': `
-STRATEGY FOCUS — CLASSICAL TECHNICAL ANALYSIS:
-- Identify classical chart patterns: Head & Shoulders, Double Top/Bottom, Triangles (ascending/descending/symmetrical), Wedges, Flags, Pennants, Cup & Handle
-- Mark key horizontal support and resistance levels
-- Note any trendline breaks or retests
-- Check for indicator divergences if visible (RSI, MACD)
-- Volume confirmation strengthens the pattern — note if volume aligns
-- Pattern target = measured move from the pattern's height`,
+  'CRT': `
+STRATEGY FOCUS — CRT (Candle Range Theory):
+1. CANDLE RANGE: Identify the most recent significant candle (daily, weekly, or the last prominent candle on chart). The CRT range is defined by that candle's High and Low.
+2. MANIPULATION PHASE: Price will typically sweep one side of the range (the High or Low) to trigger stop losses and grab liquidity before reversing. This sweep is the manipulation.
+3. DISTRIBUTION PHASE: After the sweep/manipulation, price distributes in the opposite direction, targeting the other extreme of the candle range or the next key level.
+4. THE SETUP: (a) Identify the reference candle range, (b) Watch for a sweep of the High or Low (liquidity grab), (c) Wait for a reversal signal (engulfing, rejection wick, structure break), (d) Enter in the direction of distribution.
+5. TARGETS: The opposite extreme of the reference candle range is TP1. A measured move equal to the candle range beyond the target is TP2.
+6. CONFIRMATION: The sweep must happen with momentum. A weak poke above/below with no follow-through is the signal. Look for immediate rejection after the sweep.
+- Entry: After confirmed sweep and reversal candle, at the re-entry into the candle range
+- SL: Beyond the sweep extreme (the liquidity grab point)
+- TP1: Opposite extreme of the reference candle range
+- TP2: Measured move or next key level`,
 
-  'Trend Following': `
-STRATEGY FOCUS — TREND FOLLOWING:
-- Define the current trend direction on the visible timeframe (higher highs + higher lows = uptrend)
-- Identify the best pullback entry point (retracement to a moving average, trendline, or previous structure)
-- Only trade in the direction of the dominant trend — no counter-trend setups
-- SL goes below the most recent higher low (uptrend) or above most recent lower high (downtrend)
-- Target is the next swing high/low or a 2:1 minimum R:R
-- Trend continuation is invalidated only by a clear structural break`,
+  'Price Action MS': `
+STRATEGY FOCUS — PRICE ACTION MARKET STRUCTURE:
+1. MARKET STRUCTURE: Determine the trend by analysing swing highs and swing lows. Uptrend = Higher Highs (HH) + Higher Lows (HL). Downtrend = Lower Highs (LH) + Lower Lows (LL). Range = equal highs and lows.
+2. STRUCTURE BREAK: A confirmed break of market structure (BMS) occurs when price closes beyond a previous swing high/low with a full candle body. Note each BMS explicitly.
+3. PULLBACK ENTRY: In an uptrend, enter at Higher Lows (after a pullback). In a downtrend, enter at Lower Highs (after a rally). The optimal entry is the first pullback after a BMS.
+4. TREND CONTINUATION vs REVERSAL: Multiple BMSs in sequence confirm reversal. A single swing point breach is continuation.
+5. CANDLESTICK PATTERNS: Identify reversal and continuation patterns at structure levels: Pin Bar, Engulfing, Inside Bar, Doji at extremes, Marubozu.
+6. VOLUME / MOMENTUM: Strong impulsive moves (large candle bodies) are continuation signals. Weak, overlapping candles are correction/consolidation.
+7. CONFLUENCE: A pullback to a previous BMS level + a rejection candlestick pattern = high probability entry.
+- Entry: At a confirmed structure point (HL in uptrend / LH in downtrend) with a trigger candle
+- SL: Below the most recent swing low (longs) / above swing high (shorts)
+- TP: Next swing high (longs) / swing low (shorts) based on measured structure moves`,
 
-  'Mean Reversion': `
-STRATEGY FOCUS — MEAN REVERSION:
-- Identify when price has extended significantly from the mean (moving average or VWAP if visible)
-- Look for overextended moves with signs of exhaustion: wicks, doji, divergence
-- Entry is counter-trend at extreme levels (overbought/oversold zones, Bollinger Band extremes)
-- This is a LOWER probability strategy — require more confluence before entry
-- SL goes beyond the extreme point; target is a return to the mean
-- Note: mean reversion fails in strongly trending markets — assess trend strength`,
+  'Mix': `
+STRATEGY FOCUS — MULTI-STRATEGY CONFLUENCE (MIX):
+Analyse the chart using ALL of the following frameworks simultaneously and score confluence across them:
+1. ICT/SMC: Are there order blocks, FVGs, or OTE zones present? Is there a liquidity sweep?
+2. Supply & Demand: Is price at a fresh supply or demand zone?
+3. Support & Resistance: Is price at a major horizontal level or R/S flip?
+4. Price Action Market Structure: What does the swing structure say? Is this a BMS entry?
+5. CRT: Is there a recent candle range being manipulated?
+6. Kill Zone: Is this setup occurring during London or New York kill zone timing?
 
-  'MNSR': `
-STRATEGY FOCUS — MALAYSIAN SNR (MNSR) STRATEGY:
+CONFLUENCE SCORING for Mix strategy:
+- Only take trades where AT LEAST 3 of the above frameworks align
+- If only 1–2 frameworks agree: rate as C setup, low confluence
+- If 3 frameworks agree: B setup
+- If 4+ frameworks agree: A or A+ setup
+- State explicitly which frameworks confirm and which conflict
+- The final bias must be supported by the MAJORITY of frameworks
 
-STEP 1 — IDENTIFY SNR LEVELS (use Line chart logic, focus on CLOSE & OPEN prices, ignore wicks when marking levels):
-- A-Level (RESISTANCE): Draw from bullish candle's CLOSE to next bearish candle's OPEN — creates an "A" shape. This is a resistance SNR level.
-- V-Level (SUPPORT): Draw from bearish candle's CLOSE to next bullish candle's OPEN — creates a "V" shape. This is a support SNR level.
-- Gap Level: Open-close gap between two consecutive same-colored candles. Gap levels can be reused if they previously gave a sharp reaction.
-- FRESH LEVEL: A level that has NOT been touched by a wick. Fresh levels have higher probability. A level can only be used a maximum of 2 times.
-
-STEP 2 — ESTABLISH TIMEFRAME STORYLINE (MANDATORY before any entry):
-- Hierarchy: Monthly → Weekly → Daily → H4 → H1 → M30 → M15 → M5
-- Weekly chart = main direction (the trade bias)
-- Daily chart = retracements and roadblocks
-- H4 chart = confirmation timeframe
-- CONFIRMATION RULE: Weekly setup requires H4 confirmation. Daily setup requires H1 confirmation.
-- NO VALIDATION = NO TRADE. This is a non-negotiable rule.
-
-STEP 3 — THE MARRIAGE CONCEPT (trendline MUST pair with SNR level):
-- A trendline breakout alone is NOT enough. The trendline break point MUST coincide with a fresh SNR level.
-- The trendline and SNR level must "marry" — this is the core confluence of MNSR.
-
-STEP 4 — ENTRY TRIGGERS (ALL must be present):
-1. Price taps a FRESH SNR level on the higher timeframe with a REJECTION (wick touching but closing away from the level)
-2. Apply the 2TF Rule: go two timeframes lower from your setup TF for breakout confirmation
-3. The SNR level must be fresh (first or second touch only)
-4. A candlestick wick must touch and REJECT the SNR level
-
-STEP 5 — CHOOSE AN ENTRY MODEL (select the most applicable):
-MODEL A — QM (Quasimodo) Setup:
-  - Identify the left shoulder, apex (head), and right shoulder pattern
-  - Enter on the formation of the right shoulder
-  - SL: above the apex (for sells) or below the apex (for buys)
-  - Wait for pullback to buy/sell from the right shoulder or QML (Quasimodo Level)
-
-MODEL B — Trendline Breakout (Type 1):
-  - Draw a trendline connecting at least 2–3 points
-  - Wait for a Type 1 trendline break
-  - Enter on the PULLBACK after the break
-  - The pullback candle wick must touch and reject the SNR level at point #3 of the trendline
-  - SL: above the recent highs (sells) or below recent lows (buys)
-
-MODEL C — 411 Setup:
-  - Identify a 411 trendline (4 touches, 1-1 structure)
-  - Enter at the 3rd touch of the trendline
-  - SL: above LTF swing high (sells) or below LTF swing low (buys)
-
-STEP 6 — STOP LOSS PLACEMENT:
-- QM: SL above the apex (sells) / below apex (buys)
-- Trendline Breakout: SL above the highs (sells) / below the lows (buys)
-- 411 Setup: SL above LTF swing high (sells) / below LTF swing low (buys)
-- Alternative: SL 20 pips above/below the key level (H4/H1 levels only)
-- General rule: place SL at lower low (for buys) or higher high (for sells)
-
-STEP 7 — PROFIT TARGETS (Fresh-to-Fresh):
-- Primary: Price moves from one fresh SNR level to the next fresh SNR level on the same timeframe (D-to-D, W-to-W)
-- Secondary: Next significant SNR level in the trade direction
-- This strategy is capable of 1:26 R:R ratios — let winners run to the next fresh level
-- Do NOT exit early unless price shows rejection at a key level before target
-
-STEP 8 — POSITION SIZING:
-- Risk only 0.25%–0.50% per setup (lower than standard 1% — MNSR uses tight SLs)
-- Calculate exact lot size based on SL distance and account balance
-
-STEP 9 — SESSION TIMING:
-- Best entries: London Open, London Kill Zone (07:00–10:00 GMT), NY Open (12:00–15:00 GMT)
-- Daily high/low is most likely formed during these windows
-
-ANALYSIS OUTPUT FOR MNSR:
-- State which SNR level type was identified (A-Level/V-Level/Gap)
-- Confirm if the level is FRESH (first or second touch)
-- State the entry model used (QM/Trendline Breakout/411)
-- Confirm the Marriage Concept (trendline + SNR coincidence)
-- State the higher timeframe confirmation (weekly direction + daily/H4 confirmation)
-- Show the Fresh-to-Fresh target level
-- Flag if ANY of the MNSR conditions are NOT met — if so, rate as a NO-TRADE`,
-
-  'Auto Select': `
-STRATEGY FOCUS — AUTO SELECT:
-Identify the best-fitting strategy for this specific chart setup. Choose from: SMC (if order blocks/FVGs visible), Price Action (if clear candlestick signals), Classical TA (if chart patterns present), ICT (if dealing ranges/OTE zones visible), Trend Following (if strong trend), or Mean Reversion (if overextended). State which strategy you are applying and why.`,
+Entry, SL, and TP should use the best level from the highest-timeframe confirming framework.`,
 }
+
+// Legacy key mapping — keep old keys working if stored in Zustand
+const LEGACY_STRATEGY_MAP: Record<string, string> = {
+  'Smart Money (SMC)': 'SMC',
+  'ICC ICT 714': 'ICT',
+  'MNSR': 'Price Action MS',
+  'Price Action': 'Price Action MS',
+  'Classical TA': 'Support & Resistance',
+  'Trend Following': 'Price Action MS',
+  'Mean Reversion': 'Supply & Demand',
+  'Auto Select': 'Mix',
+}
+
 
 export function buildAnalysisPrompt(settings: AnalysisSettings): string {
   const tradingConfig = getCurrency(settings.tradingCurrency)
@@ -162,8 +124,9 @@ export function buildAnalysisPrompt(settings: AnalysisSettings): string {
   const tradingSymbol = tradingConfig.symbol
   const homeSymbol    = homeConfig.symbol
 
-  const strategyKey = settings.strategy || 'Auto Select'
-  const strategyBlock = STRATEGY_INSTRUCTIONS[strategyKey] || STRATEGY_INSTRUCTIONS['Auto Select']
+  const strategyKey   = settings.strategy || 'ICT'
+  const resolvedKey   = LEGACY_STRATEGY_MAP[strategyKey] ?? strategyKey
+  const strategyBlock = STRATEGY_INSTRUCTIONS[resolvedKey] || STRATEGY_INSTRUCTIONS['Mix']
 
   return `You are an elite institutional trading analyst — the standard of your analysis is hedge fund level. You have deep expertise in Smart Money Concepts, ICT methodology, Price Action, Classical TA, and macroeconomics. You read charts with surgical precision and provide analysis that is actionable, specific, and brutally honest about risk.
 
@@ -177,6 +140,7 @@ TRADER PROFILE
 - Risk per trade (1%): ${tradingSymbol}${riskAmount.toFixed(2)} (≈ ${homeSymbol}${riskInHome.toFixed(0)} ${settings.homeCurrency})
 - Selected strategy: ${strategyKey}
 - Risk appetite: ${settings.riskAppetite}
+- Entry mode: ${settings.entryMode ?? 'Standard'}
 - Session: ${settings.session}
 - Market: ${settings.market}
 
@@ -190,11 +154,15 @@ STANDARD ANALYSIS REQUIREMENTS
 1. CHART READING: Identify asset, timeframe, current trend, market structure (HH/HL/LH/LL)
 2. KEY LEVELS: Support, resistance, order blocks, FVGs, liquidity pools, round numbers, previous session high/low
 3. BIAS & CONFIDENCE: Determine directional bias with a 0–100 confidence score based on the weight of evidence
-4. ENTRY PRECISION: Give a specific entry price or tight zone — not vague ranges
+4. ENTRY PRECISION: Give a specific entry price based on the trader's entry mode:
+   - Aggressive: Enter at the exact level the moment price touches it (highest risk, best R:R)
+   - Standard: Enter on a minor confirmation candle (e.g. pin bar, engulfing) at the level
+   - Comfortable: Wait for a clear close beyond the level and retest before entering (lowest risk, reduced R:R)
+   The trader has selected: ${settings.entryMode ?? 'Standard'} — adjust entry price accordingly
 5. STOP LOSS: Place SL at a logical structural level, not arbitrary pips
 6. THREE TAKE PROFIT LEVELS: TP1 = conservative (first key level), TP2 = extended (next major level), TP3 = maximum (swing high/low or liquidity above)
 7. LOT SIZING: Calculate 3 options for a ${settings.accountType} account with ${tradingSymbol}${settings.accountBalance}:
-   ${strategyKey === 'MNSR'
+   ${resolvedKey === 'Price Action MS'
      ? '- Conservative: 0.25% risk (MNSR standard)\n   - Moderate: 0.50% risk (MNSR max)\n   - Scaled: 3 staggered entries at SNR sub-levels (0.25% total risk)'
      : '- Conservative: 0.5–1% risk\n   - Moderate: 1–1.5% risk\n   - Scaled: 3 staggered entries at different price levels'}
 8. DUAL CURRENCY: ALL monetary values (risk, profit) shown in BOTH ${settings.tradingCurrency} AND ${settings.homeCurrency}
@@ -216,6 +184,8 @@ QUALITY STANDARDS:
 - If ${settings.tradingCurrency} ≠ ${settings.homeCurrency}, ALWAYS show conversion for all monetary values
 - For MNSR: if ANY mandatory condition is not met, set setupQuality to "C", set confluenceScore low, and clearly state "NO-TRADE" in the storyline
 
+CRITICAL: You MUST always populate tp1, tp2, tp3, rr1, rr2, rr3 with specific price levels. Never leave these empty. If uncertain, use nearest key levels as targets.
+
 ═══════════════════════════════════════
 RESPOND ONLY WITH VALID JSON — NO MARKDOWN, NO BACKTICKS, PURE JSON:
 ═══════════════════════════════════════
@@ -224,9 +194,9 @@ RESPOND ONLY WITH VALID JSON — NO MARKDOWN, NO BACKTICKS, PURE JSON:
   "asset": "detected asset pair (e.g. XAUUSD, EURUSD, BTCUSD)",
   "timeframe": "detected timeframe (e.g. H4, D1, M15)",
   "bias": "BULLISH or BEARISH or NEUTRAL",
-  "confidence": 75,
+  "confidence": "<integer 40–95 — YOUR genuine assessment of evidence weight: 90+ = crystal clear structure, 70–89 = good setup with minor uncertainty, 50–69 = mixed signals, below 50 = weak/unclear — DO NOT default to a round number>",
   "setupQuality": "A+ or A or B or C",
-  "confluenceScore": 7,
+  "confluenceScore": "<integer 1–10 — count of aligning factors from requirement #10 above>",
   "killZone": "e.g. New York Kill Zone (07:00–10:00 EST) or Outside kill zone",
   "entry": "specific price or tight zone (e.g. 2312.00–2315.00)",
   "stopLoss": "specific stop loss price with brief reason (e.g. 2298.00 — below OB base)",

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -rf .next)",
+      "Bash(npm run:*)",
+      "Bash(taskkill /F /IM node.exe)"
+    ]
+  }
+}

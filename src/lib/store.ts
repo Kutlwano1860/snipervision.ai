@@ -27,6 +27,9 @@ interface AppState {
   // Trading currency (can change per session)
   sessionTradingCurrency: Currency
   setSessionTradingCurrency: (c: Currency) => void
+
+  // Clear all session-specific state on logout
+  clearSession: () => void
 }
 
 export const useAppStore = create<AppState>()(
@@ -39,8 +42,9 @@ export const useAppStore = create<AppState>()(
       // Settings
       settings: {
         market: 'Auto Detect',
-        strategy: 'Auto Select',
+        strategy: 'ICT',
         riskAppetite: 'Conservative',
+        entryMode: 'Standard',
         session: 'Auto Detect',
         accountType: 'micro',
         tradingCurrency: 'GBP',
@@ -68,6 +72,15 @@ export const useAppStore = create<AppState>()(
           settings: { ...state.settings, tradingCurrency: c }
         }))
       },
+
+      // Clear session state on logout — analysis result and counter reset,
+      // but user preferences (settings, currency) are intentionally kept
+      clearSession: () => set({
+        profile: null,
+        currentAnalysis: null,
+        isAnalysing: false,
+        dailyUsed: 0,
+      }),
     }),
     {
       name: 'tradevision-store',
