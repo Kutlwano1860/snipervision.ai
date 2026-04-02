@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   description: 'Institutional-Grade Analysis From a ScreenshotUpload any chart screenshot. Get AI-powered technical analysis, entry signals, lot sizing, and a complete trade plan in seconds.',
   keywords: 'trading, AI analysis, forex, crypto, chart analysis, trade signals',
   icons: {
-    icon: '/SniperVision.Ai.png',
-    apple: '/SniperVision.Ai.png',
+    icon: '/SniperVision.Ai icon.png',
+    apple: '/SniperVision.Ai icon.png',
   },
 }
 
