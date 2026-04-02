@@ -6,8 +6,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'TradeVision AI — Institutional-Grade Analysis From a Screenshot',
-  description: 'Upload any chart screenshot. Get AI-powered technical analysis, entry signals, lot sizing, and a complete trade plan in seconds.',
+  title: 'TradeVision AI ',
+  description: 'Institutional-Grade Analysis From a ScreenshotUpload any chart screenshot. Get AI-powered technical analysis, entry signals, lot sizing, and a complete trade plan in seconds.',
   keywords: 'trading, AI analysis, forex, crypto, chart analysis, trade signals',
   icons: {
     icon: '/Tradingversionai.jpeg',

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { PLANS, getCurrency } from '@/lib/constants'
+import { PLANS } from '@/lib/constants'
 import { createClient } from '@/lib/supabase/client'
 import type { SubscriptionPlan } from '@/types'
 
@@ -258,12 +258,12 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="px-12 py-24 bg-[var(--bg2)] border-t border-[var(--border)]">
-        <div className="text-center mb-14">
-          <h2 className="text-[clamp(30px,4vw,46px)] font-extrabold tracking-tight mb-3">Built for Serious Traders</h2>
-          <p className="text-[15px] text-[#777] max-w-md mx-auto">Everything you need to make confident, data-driven decisions.</p>
+      <section id="features" className="px-4 sm:px-8 md:px-12 py-16 md:py-24 bg-[var(--bg2)] border-t border-[var(--border)]">
+        <div className="text-center mb-10 md:mb-14">
+          <h2 className="text-[clamp(26px,4vw,46px)] font-extrabold tracking-tight mb-3">Built for Serious Traders</h2>
+          <p className="text-[14px] md:text-[15px] text-[#777] max-w-md mx-auto">Everything you need to make confident, data-driven decisions.</p>
         </div>
-        <div className="grid grid-cols-3 gap-4 max-w-[960px] mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-[960px] mx-auto">
           {[
             { icon:'👁',  title:'AI Chart Reading',          desc:'Vision AI reads any chart screenshot from TradingView, MT4, MT5, cTrader, Binance — any platform, any timeframe.' },
             { icon:'🎯',  title:'Entry, SL & 3 TP Levels',   desc:'Precise entry zones, stop loss placement and 3 take profit targets with full risk/reward ratios on every analysis.' },
@@ -287,12 +287,12 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section id="how" className="px-12 py-24">
-        <div className="text-center mb-14">
-          <h2 className="text-[clamp(30px,4vw,46px)] font-extrabold tracking-tight mb-3">How It Works</h2>
-          <p className="text-[15px] text-[#777]">From screenshot to trade plan in <span className="text-[var(--green)]">under 10 seconds.</span></p>
+      <section id="how" className="px-4 sm:px-8 md:px-12 py-16 md:py-24">
+        <div className="text-center mb-10 md:mb-14">
+          <h2 className="text-[clamp(26px,4vw,46px)] font-extrabold tracking-tight mb-3">How It Works</h2>
+          <p className="text-[14px] md:text-[15px] text-[#777]">From screenshot to trade plan in <span className="text-[var(--green)]">under 10 seconds.</span></p>
         </div>
-        <div className="grid grid-cols-3 gap-8 max-w-[860px] mx-auto text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-[860px] mx-auto text-center">
           {[
             { n:'01', icon:'📸', title:'Screenshot Your Chart',   desc:'Capture from any platform — TradingView, MT4, Thinkorswim, or mobile. Any timeframe, any asset.' },
             { n:'02', icon:'⚙️', title:'AI Analyzes Everything',  desc:'Vision AI reads candlesticks, patterns, indicators, and overlays live market context, news risk, and macro data.' },
@@ -323,13 +323,18 @@ export default function LandingPage() {
       <footer className="border-t border-[var(--border)] px-4 sm:px-8 md:px-12 py-10 flex flex-col sm:flex-row justify-between items-start gap-6">
         <div>
           <div className="flex items-center gap-2 text-[15px] font-bold mb-2">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="text-[var(--green)]">
-              <polyline points="1,14 6,8 10,11 15,4 19,7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <img src="/Tradingversionai.jpeg" alt="TradeVision AI" className="w-7 h-7 rounded-md object-cover" />
             TradeVision AI
           </div>
-          <p className="text-[11px] text-[#444] max-w-[480px] leading-relaxed">
+          <p className="text-[11px] text-[#444] max-w-[480px] leading-relaxed mb-2">
             TradeVision AI provides educational analysis only. This is not financial advice. Trading involves substantial risk of loss and is not suitable for every investor. Past performance is not indicative of future results.
+          </p>
+          <p className="text-[11px] text-[#555]">
+            Powered by{' '}
+            <a href="https://discord.gg/rtFVC6kdr" target="_blank" rel="noreferrer"
+              className="text-[var(--green)] hover:underline font-semibold">
+              Titanic Fx Team
+            </a>
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 text-[12px]">
