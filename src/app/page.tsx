@@ -323,7 +323,7 @@ export default function LandingPage() {
       <footer className="border-t border-[var(--border)] px-4 sm:px-8 md:px-12 py-10 flex flex-col sm:flex-row justify-between items-start gap-6">
         <div>
           <div className="flex items-center gap-2 text-[15px] font-bold mb-2">
-            <img src="/Tradingversionai.jpeg" alt="SniperVision.AI" className="w-7 h-7 rounded-md object-cover" />
+            <img src="/SniperVision.Ai.png" alt="SniperVision.AI" className="w-7 h-7 rounded-md object-cover" />
             SniperVision.AI
           </div>
           <p className="text-[11px] text-[#444] max-w-[480px] leading-relaxed mb-2">

@@ -145,7 +145,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <nav className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-7 h-14 border-b border-[var(--border)] bg-[rgba(8,8,8,0.96)] backdrop-blur-xl">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <img src="/Tradingversionai.jpeg" alt="SniperVision.AI" className="w-8 h-8 rounded-lg object-cover" />
+          <img src="/SniperVision.Ai.png" alt="SniperVision.AI" className="w-8 h-8 rounded-lg object-cover" />
           <span className="hidden sm:inline text-[15px] font-extrabold tracking-tight">SniperVision.AI</span>
         </Link>
 
