@@ -85,8 +85,8 @@ function Nav() {
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-8 md:px-12 h-14 md:h-16 border-b border-[var(--border)] bg-[rgba(8,8,8,0.96)] backdrop-blur-xl">
       <div className="flex items-center gap-2 shrink-0">
-        <img src="/Tradingversionai.jpeg" alt="TradeVision AI" className="w-8 h-8 rounded-lg object-cover" />
-        <span className="hidden sm:inline text-[15px] md:text-[17px] font-bold">TradeVision AI</span>
+        <img src="/SniperVision.Ai.png" alt="SniperVision.AI" className="w-8 h-8 rounded-lg object-cover" />
+        <span className="hidden sm:inline text-[15px] md:text-[17px] font-bold">SniperVision.AI</span>
       </div>
       <div className="hidden md:flex items-center gap-7">
         <a href="#features" className="text-[13px] text-[#777] hover:text-white transition-colors">Features</a>
@@ -323,11 +323,11 @@ export default function LandingPage() {
       <footer className="border-t border-[var(--border)] px-4 sm:px-8 md:px-12 py-10 flex flex-col sm:flex-row justify-between items-start gap-6">
         <div>
           <div className="flex items-center gap-2 text-[15px] font-bold mb-2">
-            <img src="/Tradingversionai.jpeg" alt="TradeVision AI" className="w-7 h-7 rounded-md object-cover" />
-            TradeVision AI
+            <img src="/Tradingversionai.jpeg" alt="SniperVision.AI" className="w-7 h-7 rounded-md object-cover" />
+            SniperVision.AI
           </div>
           <p className="text-[11px] text-[#444] max-w-[480px] leading-relaxed mb-2">
-            TradeVision AI provides educational analysis only. This is not financial advice. Trading involves substantial risk of loss and is not suitable for every investor. Past performance is not indicative of future results.
+            SniperVision.AI provides educational analysis only. This is not financial advice. Trading involves substantial risk of loss and is not suitable for every investor. Past performance is not indicative of future results.
           </p>
           <p className="text-[11px] text-[#555]">
             Powered by{' '}
@@ -358,7 +358,7 @@ export default function LandingPage() {
         </div>
       </footer>
       <div className="text-center text-[11px] text-[#444] py-4 border-t border-[var(--border)]">
-        © 2026 TradeVision AI. All rights reserved.
+        © 2026 SniperVision.AI. All rights reserved.
       </div>
     </div>
   )
