@@ -10,8 +10,8 @@ AI-powered trading analysis platform. Upload any chart screenshot and get instit
 
 If using GitHub:
 ```bash
-git clone https://github.com/yourusername/tradevision-ai.git
-cd tradevision-ai
+git clone https://github.com/yourusername/snipervision.ai.git
+cd snipervision.ai
 ```
 
 Or just copy the project folder to your machine and open it in VS Code.
@@ -83,7 +83,7 @@ Open http://localhost:3000 in your browser. That's it — the app is running!
 ## 📁 Project Structure
 
 ```
-tradevision-ai/
+snipervision.ai/
 ├── src/
 │   ├── app/
 │   │   ├── page.tsx              ← Landing page

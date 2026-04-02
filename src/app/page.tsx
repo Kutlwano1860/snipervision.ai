@@ -333,7 +333,7 @@ export default function LandingPage() {
             Powered by{' '}
             <a href="https://discord.gg/rtFVC6kdr" target="_blank" rel="noreferrer"
               className="text-[var(--green)] hover:underline font-semibold">
-              Titanic Fx Team
+              Digitra Software
             </a>
           </p>
         </div>
