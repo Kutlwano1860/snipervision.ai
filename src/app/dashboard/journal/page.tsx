@@ -163,8 +163,93 @@ export default function JournalPage() {
         </div>
       )}
 
-      {/* Table */}
-      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[12px] overflow-x-auto">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {entries.length === 0 && !loading && (
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-[var(--surface)] border border-[var(--border)] rounded-[12px]">
+            <div className="text-[40px] opacity-20 mb-3">📒</div>
+            <p className="text-[13px] text-[#777]">No trades yet.</p>
+          </div>
+        )}
+        {entries.map(e => {
+          const pnlColor = (e.pnl_home_currency || 0) >= 0 ? 'text-[var(--green)]' : 'text-[var(--red)]'
+          return (
+            <div key={e.id} className="bg-[var(--surface)] border border-[var(--border)] rounded-[12px] p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold font-mono-tv text-[14px]">{e.asset}</span>
+                    <span className={`text-[10px] font-bold ${e.bias === 'BULLISH' ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
+                      {e.bias === 'BULLISH' ? '▲ BULL' : '▼ BEAR'}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-[#777] font-mono-tv mt-0.5">{e.created_at?.substring(0,10)} · {e.strategy}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {e.outcome === 'live' ? (
+                    <button onClick={() => { setExitPrice(''); setPnlInput(''); setEditingId(editingId === e.id ? null : e.id) }}
+                      disabled={savingId === e.id}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[8px] font-bold font-mono-tv bg-[rgba(59,130,246,0.12)] text-[var(--blue)] border border-[rgba(59,130,246,0.25)]">
+                      {savingId === e.id ? '...' : '⏳ LIVE ✎'}
+                    </button>
+                  ) : (
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[8px] font-bold font-mono-tv
+                      ${e.outcome === 'win' ? 'bg-[var(--green-dim)] text-[var(--green)]'
+                      : e.outcome === 'loss' ? 'bg-[rgba(239,68,68,0.12)] text-[var(--red)]'
+                      : e.outcome === 'breakeven' ? 'bg-[rgba(245,158,11,0.12)] text-[var(--amber)]'
+                      : 'bg-[rgba(107,114,128,0.12)] text-[#777]'}`}>
+                      {e.outcome === 'win' ? '✓ WIN' : e.outcome === 'loss' ? '✗ LOSS' : e.outcome === 'breakeven' ? '➡ BE' : '— SKIP'}
+                    </span>
+                  )}
+                  <button onClick={() => deleteEntry(e.id)} className="text-[11px] text-[#444] hover:text-[var(--red)] transition-colors px-1">✕</button>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-[var(--surface2)] rounded-[8px] p-2 text-center">
+                  <div className="text-[8px] text-[#555] font-mono-tv">ENTRY</div>
+                  <div className="text-[11px] font-bold font-mono-tv text-[var(--blue)]">{e.entry_price || '—'}</div>
+                </div>
+                <div className="bg-[var(--surface2)] rounded-[8px] p-2 text-center">
+                  <div className="text-[8px] text-[#555] font-mono-tv">EXIT</div>
+                  <div className="text-[11px] font-bold font-mono-tv">{e.exit_price || '—'}</div>
+                </div>
+                <div className="bg-[var(--surface2)] rounded-[8px] p-2 text-center">
+                  <div className="text-[8px] text-[#555] font-mono-tv">P&L</div>
+                  <div className={`text-[11px] font-bold font-mono-tv ${pnlColor}`}>
+                    {e.pnl_home_currency != null ? `${e.pnl_home_currency >= 0 ? '+' : ''}${homeConfig.symbol}${Math.abs(e.pnl_home_currency).toLocaleString()}` : 'OPEN'}
+                  </div>
+                </div>
+              </div>
+              {editingId === e.id && (
+                <div className="mt-3 pt-3 border-t border-[var(--border)]">
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <div>
+                      <div className="text-[8px] text-[#555] font-mono-tv mb-1">EXIT PRICE</div>
+                      <input value={exitPrice} onChange={ev => setExitPrice(ev.target.value)} placeholder={e.entry_price || '0.00'} type="number" step="any"
+                        className="w-28 bg-[var(--surface)] border border-[var(--border)] rounded-[6px] px-2.5 py-1.5 text-[11px] font-mono-tv outline-none focus:border-[var(--green)]" />
+                    </div>
+                    <div>
+                      <div className="text-[8px] text-[#555] font-mono-tv mb-1">P&L ({homeCurrency})</div>
+                      <input value={pnlInput} onChange={ev => setPnlInput(ev.target.value)} placeholder="e.g. 250" type="number" step="any"
+                        className="w-28 bg-[var(--surface)] border border-[var(--border)] rounded-[6px] px-2.5 py-1.5 text-[11px] font-mono-tv outline-none focus:border-[var(--green)]" />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button onClick={() => updateOutcome(e.id, 'win', true)} disabled={!!savingId} className="px-3 py-1.5 rounded-[6px] text-[11px] font-bold bg-[var(--green-dim)] text-[var(--green)] border border-[rgba(34,197,94,0.3)] disabled:opacity-50">WIN</button>
+                    <button onClick={() => updateOutcome(e.id, 'loss', true)} disabled={!!savingId} className="px-3 py-1.5 rounded-[6px] text-[11px] font-bold bg-[rgba(239,68,68,0.12)] text-[var(--red)] border border-[rgba(239,68,68,0.3)] disabled:opacity-50">LOSS</button>
+                    <button onClick={() => updateOutcome(e.id, 'breakeven', true)} disabled={!!savingId} className="px-3 py-1.5 rounded-[6px] text-[11px] font-bold bg-[rgba(245,158,11,0.12)] text-[var(--amber)] border border-[rgba(245,158,11,0.3)] disabled:opacity-50">BE</button>
+                    <button onClick={() => updateOutcome(e.id, 'skipped', false)} disabled={!!savingId} className="px-3 py-1.5 rounded-[6px] text-[11px] font-bold bg-[rgba(107,114,128,0.12)] text-[#777] border border-[rgba(107,114,128,0.2)] disabled:opacity-50">SKIP</button>
+                    <button onClick={() => { setEditingId(null); setExitPrice(''); setPnlInput('') }} className="px-2 py-1.5 text-[11px] text-[#555] hover:text-white">✕</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block bg-[var(--surface)] border border-[var(--border)] rounded-[12px] overflow-x-auto">
         <div className="grid grid-cols-[70px_100px_55px_1fr_80px_80px_90px_130px] px-5 py-3 border-b border-[var(--border)] bg-[var(--surface2)]">
           {['DATE','ASSET','BIAS','STRATEGY','ENTRY','EXIT',`P&L (${homeCurrency})`,'RESULT'].map(h => (
             <span key={h} className="text-[8px] font-mono-tv font-bold tracking-widest text-[#777]">{h}</span>
