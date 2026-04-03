@@ -107,7 +107,7 @@ export default function HistoryPage() {
       </div>
 
       {loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
           {Array.from({ length: 9 }).map((_, i) => (
             <div key={i} className="bg-[var(--surface)] border border-[var(--border)] rounded-[12px] p-4 animate-pulse h-[130px]" />
           ))}
@@ -121,7 +121,7 @@ export default function HistoryPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
         {filtered.map(e => {
           const outcome = getOutcome(e)
           const isOpen  = expanded === e.id

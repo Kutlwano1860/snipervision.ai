@@ -995,7 +995,7 @@ export default function DashboardPage() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] gap-5 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-5 items-start">
 
           {/* ── LEFT: Upload + Settings ── */}
           <div className="tv-panel">

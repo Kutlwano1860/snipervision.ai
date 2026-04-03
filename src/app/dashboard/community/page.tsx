@@ -215,8 +215,7 @@ export default function CommunityPage() {
     }
   }
 
-  // ── Chat bubble component ──
-  function ChatBubble({ post, feed }: { post: Post; feed: 'general' | 'premium' }) {
+  function renderBubble(post: Post, feed: 'general' | 'premium') {
     const isMe = post.user_id === profile?.id
     return (
       <div className={`flex gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end mb-3`}>
@@ -281,8 +280,7 @@ export default function CommunityPage() {
     )
   }
 
-  // ── Chat input ──
-  function ChatInput({ feed }: { feed: 'general' | 'premium' }) {
+  function renderChatInput(feed: 'general' | 'premium') {
     return (
       <div className="border-t border-[var(--border)] bg-[var(--surface)] p-3">
         {imagePreview && (
@@ -313,13 +311,11 @@ export default function CommunityPage() {
           </div>
         )}
         <div className="flex items-end gap-2">
-          {/* Image upload */}
           <button onClick={() => fileRef.current?.click()}
             className="w-9 h-9 flex-shrink-0 bg-[var(--surface2)] border border-[var(--border)] rounded-full flex items-center justify-center text-[14px] hover:border-[var(--green)] transition-colors">
             📎
           </button>
           <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png,.webp,.gif" className="hidden" onChange={onImageChange} />
-
           <textarea
             ref={textareaRef}
             value={content}
@@ -327,11 +323,10 @@ export default function CommunityPage() {
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitPost(feed) } }}
             maxLength={500}
             rows={1}
-            placeholder="Type a message... (Enter to send)"
+            placeholder="Type a message..."
             className="flex-1 bg-[var(--surface2)] border border-[var(--border)] rounded-[20px] px-4 py-2 text-[12px] text-white resize-none outline-none focus:border-[var(--green)] transition-colors placeholder:text-[#444] max-h-[100px]"
             style={{ lineHeight: '1.4' }}
           />
-
           <button
             onClick={() => submitPost(feed)}
             disabled={posting || uploadingImage || (!content.trim() && !imageFile)}
@@ -344,7 +339,7 @@ export default function CommunityPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px)] max-w-[900px] mx-auto">
+    <div className="flex flex-col h-[calc(100vh-56px-64px)] lg:h-[calc(100vh-56px)] max-w-[900px] mx-auto">
       {/* Header + tabs */}
       <div className="flex-shrink-0 px-4 pt-4 pb-2">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
@@ -381,11 +376,11 @@ export default function CommunityPage() {
                 <p className="text-[13px] text-[#777]">No messages yet. Start the conversation!</p>
               </div>
             ) : (
-              generalPosts.map(post => <ChatBubble key={post.id} post={post} feed="general" />)
+              generalPosts.map(post => <div key={post.id}>{renderBubble(post, 'general')}</div>)
             )}
             <div ref={bottomRef} />
           </div>
-          <ChatInput feed="general" />
+          {renderChatInput('general')}
         </div>
       )}
 
@@ -402,12 +397,12 @@ export default function CommunityPage() {
                 <p className="text-[13px] text-[#777]">{canPostPremium ? 'No premium setups yet. Share the first one!' : 'Upgrade to Premium to post here.'}</p>
               </div>
             ) : (
-              premiumPosts.map(post => <ChatBubble key={post.id} post={post} feed="premium" />)
+              premiumPosts.map(post => <div key={post.id}>{renderBubble(post, 'premium')}</div>)
             )}
             <div />
           </div>
           {canPostPremium
-            ? <ChatInput feed="premium" />
+            ? renderChatInput('premium')
             : (
               <div className="border-t border-[var(--border)] p-4 text-center">
                 <p className="text-[12px] text-[#777]">🔒 Upgrade to Premium to post in this feed</p>

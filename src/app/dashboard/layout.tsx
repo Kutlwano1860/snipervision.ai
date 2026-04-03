@@ -149,8 +149,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span className="hidden sm:inline text-[15px] font-extrabold tracking-tight">SniperVision.AI</span>
         </Link>
 
-        {/* Tabs — desktop only */}
-        <div className="hidden md:flex gap-0.5 bg-[var(--surface)] border border-[var(--border)] rounded-[8px] p-0.5">
+        {/* Tabs — desktop only (lg+) */}
+        <div className="hidden lg:flex gap-0.5 bg-[var(--surface)] border border-[var(--border)] rounded-[8px] p-0.5">
           {tabs.map(t => (
             <Link key={t.href} href={t.href}
               className={`px-3 py-1.5 rounded-[7px] text-[11px] font-semibold transition-all whitespace-nowrap
@@ -165,7 +165,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Right side */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Currency indicator — desktop only */}
-          <div className="hidden md:flex items-center gap-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-md px-2.5 py-1 text-[10px] font-mono-tv">
+          <div className="hidden lg:flex items-center gap-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-md px-2.5 py-1 text-[10px] font-mono-tv">
             <span className="text-[#777]">
               {CURRENCIES.find(c => c.code === (profile?.home_currency || 'ZAR'))?.flag} {profile?.home_currency || 'ZAR'}
             </span>
@@ -197,7 +197,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Tier badge — desktop only */}
           <button onClick={() => setShowUpgradeModal(true)}
-            className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono-tv tracking-wider border"
+            className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono-tv tracking-wider border"
             style={{ background: TIER_COLORS[tier], color: TIER_TEXT[tier], borderColor: TIER_TEXT[tier] + '44' }}>
             {TIER_ICONS[tier]} {tier.toUpperCase()}
           </button>
@@ -298,12 +298,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
 
       {/* Page content */}
-      <main className="flex-1 pb-16 md:pb-0">
+      <main className="flex-1 pb-16 lg:pb-0">
         {children}
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgba(8,8,8,0.96)] border-t border-[var(--border)] backdrop-blur-xl safe-area-pb">
+      {/* Bottom Navigation — mobile + tablet (hidden on desktop lg+) */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgba(8,8,8,0.96)] border-t border-[var(--border)] backdrop-blur-xl safe-area-pb">
         <div className="flex overflow-x-auto scrollbar-hide">
           {[
             { label: 'Analyse', href: '/dashboard', icon: '⚡' },
