@@ -64,7 +64,7 @@ export default function CommunityPage() {
 
       const { data, error } = await supabase
         .from('community_posts')
-        .select('*, profiles(name)')
+        .select('*')
         .eq('feed', feed)
         .is('parent_id', null)
         .order('created_at', { ascending: true })
@@ -86,7 +86,7 @@ export default function CommunityPage() {
 
       const mapped = (data || []).map((p: any) => ({
         ...p,
-        user_name: p.profiles?.name || 'Trader',
+        user_name: p.user_name || 'Trader',
         user_liked: likedIds.includes(p.id),
       }))
 
@@ -173,6 +173,7 @@ export default function CommunityPage() {
       bias:  (feed === 'premium' && postBias)  ? postBias  : null,
       image_url,
       parent_id: null,
+      user_name: profile?.name || 'Trader',
     })
 
     if (error) {
