@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/lib/store'
+import toast from 'react-hot-toast'
 
 interface AnalysisEntry {
   id: string
@@ -48,6 +49,17 @@ export default function HistoryPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  async function deleteEntry(id: string) {
+    const { error } = await supabase.from('analyses').delete().eq('id', id)
+    if (error) {
+      toast.error('Could not delete')
+    } else {
+      toast.success('Deleted')
+      setEntries(prev => prev.filter(e => e.id !== id))
+      if (expanded === id) setExpanded(null)
+    }
+  }
 
   function getOutcome(e: AnalysisEntry) {
     return e.journal_entries?.[0]?.outcome || 'live'
@@ -192,8 +204,17 @@ export default function HistoryPage() {
                 </div>
               )}
 
-              <div className="px-4 pb-2 text-[9px] text-[#555] font-mono-tv">
-                {isOpen ? '▲ Collapse' : '▼ Expand details'}
+              <div className="px-4 pb-3 flex items-center justify-between">
+                <span className="text-[9px] text-[#555] font-mono-tv">
+                  {isOpen ? '▲ Collapse' : '▼ Expand details'}
+                </span>
+                {isOpen && (
+                  <button
+                    onClick={ev => { ev.stopPropagation(); deleteEntry(e.id) }}
+                    className="text-[10px] text-[#444] hover:text-[var(--red)] transition-colors font-mono-tv border border-[var(--border)] hover:border-[rgba(239,68,68,0.4)] px-2 py-1 rounded-md">
+                    🗑 Delete
+                  </button>
+                )}
               </div>
             </div>
           )

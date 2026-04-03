@@ -107,74 +107,149 @@ function Nav() {
   )
 }
 
+const DEMO_SETUPS = [
+  {
+    pair: 'EUR/USD', tf: '1H', bias: 'BULLISH', biasColor: 'var(--green)',
+    entry: '1.0842', sl: '1.0815', tp: '1.0895', conf: '87%',
+    alert: '⚠️ US CPI in 4h — size down on USD pairs',
+    lots1: '2×0.01', risk1: '$8 (R150)',   profit1: '$20 (R374)',
+    lots2: '3×0.02', risk2: '$18 (R337)',  profit2: '$46 (R861)',
+    reasoning: 'Bullish order block at 1.0830 demand zone with FVG fill. RSI divergence on 1H. DXY weakening supports EUR upside.',
+    caution: 'Size down 50% — CPI volatility risk.',
+    rr: '1:1.96',
+  },
+  {
+    pair: 'XAU/USD', tf: '4H', bias: 'BULLISH', biasColor: 'var(--green)',
+    entry: '2,318.50', sl: '2,298.00', tp: '2,355.00', conf: '91%',
+    alert: '📈 Gold breaking structure — institutional buy pressure detected',
+    lots1: '1×0.01', risk1: '$20 (R374)',  profit1: '$36 (R673)',
+    lots2: '2×0.01', risk2: '$41 (R767)',  profit2: '$73 (R1,365)',
+    reasoning: 'Weekly BOS confirmed above $2,300. Fair value gap on 4H acting as support. DXY rejecting resistance.',
+    caution: 'Watch NFP Friday — reduce size 24h before release.',
+    rr: '1:2.17',
+  },
+  {
+    pair: 'GBP/JPY', tf: '1H', bias: 'BEARISH', biasColor: 'var(--red)',
+    entry: '191.420', sl: '191.780', tp: '190.680', conf: '83%',
+    alert: '🏦 BOJ intervention risk — JPY pairs volatile',
+    lots1: '2×0.01', risk1: '$7 (R131)',   profit1: '$14 (R262)',
+    lots2: '3×0.01', risk2: '$11 (R206)',  profit2: '$22 (R411)',
+    reasoning: 'Distribution pattern at 192.00 supply zone. CHOCH on M15 confirmed. RSI overbought on 1H. Bearish engulfing candle at OB.',
+    caution: 'BOJ statements expected — avoid holding overnight.',
+    rr: '1:2.06',
+  },
+  {
+    pair: 'BTC/USD', tf: '4H', bias: 'BULLISH', biasColor: 'var(--green)',
+    entry: '67,240', sl: '65,900', tp: '69,800', conf: '79%',
+    alert: '🔥 BTC dominance rising — altcoin rotation incoming',
+    lots1: '0.001', risk1: '$13 (R243)',   profit1: '$26 (R486)',
+    lots2: '0.002', risk2: '$27 (R505)',   profit2: '$51 (R954)',
+    reasoning: 'Accumulation range breakout above $67K. On-chain: exchange outflows spiking. 4H FVG filled at $66,800 acting as demand.',
+    caution: 'High volatility asset — use strict SL discipline.',
+    rr: '1:1.90',
+  },
+]
+
 // ── Hero Demo Card ──
 function DemoCard() {
+  const [idx, setIdx] = useState(0)
+  const [fading, setFading] = useState(false)
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setFading(true)
+      setTimeout(() => {
+        setIdx(i => (i + 1) % DEMO_SETUPS.length)
+        setFading(false)
+      }, 350)
+    }, 5000)
+    return () => clearInterval(t)
+  }, [])
+
+  const s = DEMO_SETUPS[idx]
+  const isBull = s.bias === 'BULLISH'
+
   return (
     <div className="animate-fade-up bg-[var(--surface)] border border-[var(--border2)] rounded-[18px] p-6 max-w-[660px] w-full mx-auto text-left mt-2"
          style={{ animationDelay: '0.15s' }}>
-      {/* Event alert */}
-      <div className="flex items-center gap-2 bg-[rgba(245,158,11,0.08)] border border-[rgba(245,158,11,0.25)] rounded-lg px-3 py-2 mb-4 text-[12px] text-[var(--amber)]">
-        <span className="w-[6px] h-[6px] rounded-full bg-[var(--amber)] animate-pulse-dot flex-shrink-0" />
-        <strong>⚠️ Live Alert:</strong>&nbsp;US CPI releases in 4h 20m — high volatility expected on USD pairs
-      </div>
 
-      {/* Header */}
+      {/* Dot indicators */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[var(--green-dim)] border border-[var(--green-border)] rounded-[10px] flex items-center justify-center text-[var(--green)] text-base">◎</div>
-          <div>
-            <div className="text-[15px] font-bold">EUR/USD Analysis</div>
-            <div className="text-[11px] text-[#777] font-mono-tv mt-0.5">1H Timeframe · USD Trading Account</div>
-          </div>
+        <div className={`flex items-center gap-2 text-[11px] transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
+             style={{ color: 'var(--amber)' }}>
+          <span className="w-[6px] h-[6px] rounded-full bg-[var(--amber)] animate-pulse-dot flex-shrink-0" />
+          {s.alert}
         </div>
-        <div className="bg-[var(--green-dim)] border border-[var(--green-border)] text-[var(--green)] px-3 py-1 rounded-full text-[11px] font-bold font-mono-tv tracking-wider">
-          BULLISH BIAS
+        <div className="flex gap-1 flex-shrink-0 ml-2">
+          {DEMO_SETUPS.map((_, i) => (
+            <button key={i} onClick={() => { setFading(true); setTimeout(() => { setIdx(i); setFading(false) }, 350) }}
+              className={`w-1.5 h-1.5 rounded-full transition-all ${i === idx ? 'bg-[var(--green)] w-4' : 'bg-[#333]'}`} />
+          ))}
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-2 mb-4">
-        {[
-          { label: 'Entry',       value: '1.0842', color: 'text-[var(--green)]' },
-          { label: 'Stop Loss',   value: '1.0815', color: 'text-[var(--red)]' },
-          { label: 'Take Profit', value: '1.0895', color: 'text-[var(--green)]' },
-          { label: 'Confidence',  value: '87%',    color: 'text-[var(--amber)]' },
-        ].map(s => (
-          <div key={s.label} className="bg-[var(--surface2)] border border-[var(--border)] rounded-[10px] p-3 text-center">
-            <div className="text-[10px] text-[#777] mb-1">{s.label}</div>
-            <div className={`text-[17px] font-extrabold font-mono-tv ${s.color}`}>{s.value}</div>
+      <div className={`transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-[var(--green-dim)] border border-[var(--green-border)] rounded-[10px] flex items-center justify-center text-[var(--green)] text-base">◎</div>
+            <div>
+              <div className="text-[15px] font-bold">{s.pair} Analysis</div>
+              <div className="text-[11px] text-[#777] font-mono-tv mt-0.5">{s.tf} Timeframe · USD Trading Account</div>
+            </div>
           </div>
-        ))}
-      </div>
-
-      {/* Lot sizing preview */}
-      <div className="bg-[var(--surface2)] border border-[var(--border)] rounded-[10px] p-3 mb-4">
-        <div className="text-[9px] font-bold font-mono-tv tracking-wider text-[var(--green)] mb-2">
-          💰 SMART LOT SIZING — $800 USD MICRO ACCOUNT (≈ R14,960 ZAR)
-        </div>
-        <div className="grid grid-cols-4 gap-2 text-[9px] font-mono-tv text-[#444] px-2 mb-1">
-          {['TYPE','LOTS','RISK','TP1 PROFIT'].map(h => <span key={h}>{h}</span>)}
-        </div>
-        {[
-          { type:'Conservative', lots:'2×0.01', risk:'$8 (R150)',  profit:'$20 (R374)' },
-          { type:'Moderate',     lots:'3×0.02', risk:'$18 (R337)', profit:'$46 (R861)' },
-        ].map(r => (
-          <div key={r.type} className="grid grid-cols-4 gap-2 items-center bg-[var(--surface)] border border-[var(--border)] rounded-md px-2 py-1.5 mb-1 text-[10px] font-mono-tv">
-            <span className="text-[#777] font-bold">{r.type}</span>
-            <span className="text-[var(--blue)]">{r.lots}</span>
-            <span className="text-[var(--red)]">{r.risk}</span>
-            <span className="text-[var(--green)]">{r.profit}</span>
+          <div className={`px-3 py-1 rounded-full text-[11px] font-bold font-mono-tv tracking-wider border
+            ${isBull
+              ? 'bg-[var(--green-dim)] border-[var(--green-border)] text-[var(--green)]'
+              : 'bg-[rgba(239,68,68,0.1)] border-[rgba(239,68,68,0.3)] text-[var(--red)]'}`}>
+            {s.bias} BIAS
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Reasoning */}
-      <div className="bg-[var(--surface2)] border border-[var(--border)] rounded-[10px] p-3 flex gap-3 items-start">
-        <div className="w-7 h-7 bg-[var(--green-dim)] rounded-[7px] flex items-center justify-center text-[var(--green)] text-xs flex-shrink-0 mt-0.5">◎</div>
-        <p className="text-[12px] text-[#777] leading-relaxed">
-          <strong className="text-white">AI Reasoning:</strong> Price formed a bullish order block at the 1.0830 demand zone with a fair value gap fill. RSI showing bullish divergence on the 1H. DXY weakening supports EUR upside.{' '}
-          <strong className="text-[var(--amber)]">⚠️ Consider sizing down 50% due to CPI risk in 4h.</strong> R:R ratio: 1:1.96
-        </p>
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+          {[
+            { label: 'Entry',       value: s.entry, color: 'text-[var(--green)]' },
+            { label: 'Stop Loss',   value: s.sl,    color: 'text-[var(--red)]' },
+            { label: 'Take Profit', value: s.tp,    color: 'text-[var(--green)]' },
+            { label: 'Confidence',  value: s.conf,  color: 'text-[var(--amber)]' },
+          ].map(stat => (
+            <div key={stat.label} className="bg-[var(--surface2)] border border-[var(--border)] rounded-[10px] p-3 text-center">
+              <div className="text-[10px] text-[#777] mb-1">{stat.label}</div>
+              <div className={`text-[17px] font-extrabold font-mono-tv ${stat.color}`}>{stat.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Lot sizing */}
+        <div className="bg-[var(--surface2)] border border-[var(--border)] rounded-[10px] p-3 mb-4">
+          <div className="text-[9px] font-bold font-mono-tv tracking-wider text-[var(--green)] mb-2">
+            💰 SMART LOT SIZING — $800 USD MICRO ACCOUNT (≈ R14,960 ZAR)
+          </div>
+          <div className="grid grid-cols-4 gap-2 text-[9px] font-mono-tv text-[#444] px-2 mb-1">
+            {['TYPE','LOTS','RISK','TP1 PROFIT'].map(h => <span key={h}>{h}</span>)}
+          </div>
+          {[
+            { type: 'Conservative', lots: s.lots1, risk: s.risk1, profit: s.profit1 },
+            { type: 'Moderate',     lots: s.lots2, risk: s.risk2, profit: s.profit2 },
+          ].map(r => (
+            <div key={r.type} className="grid grid-cols-4 gap-2 items-center bg-[var(--surface)] border border-[var(--border)] rounded-md px-2 py-1.5 mb-1 text-[10px] font-mono-tv">
+              <span className="text-[#777] font-bold">{r.type}</span>
+              <span className="text-[var(--blue)]">{r.lots}</span>
+              <span className="text-[var(--red)]">{r.risk}</span>
+              <span className="text-[var(--green)]">{r.profit}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Reasoning */}
+        <div className="bg-[var(--surface2)] border border-[var(--border)] rounded-[10px] p-3 flex gap-3 items-start">
+          <div className="w-7 h-7 bg-[var(--green-dim)] rounded-[7px] flex items-center justify-center text-[var(--green)] text-xs flex-shrink-0 mt-0.5">◎</div>
+          <p className="text-[12px] text-[#777] leading-relaxed">
+            <strong className="text-white">AI Reasoning:</strong> {s.reasoning}{' '}
+            <strong className="text-[var(--amber)]">⚠️ {s.caution}</strong> R:R ratio: {s.rr}
+          </p>
+        </div>
       </div>
     </div>
   )

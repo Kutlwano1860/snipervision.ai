@@ -57,6 +57,16 @@ export default function JournalPage() {
     setPnlInput('')
   }
 
+  async function deleteEntry(id: string) {
+    const { error } = await supabase.from('journal_entries').delete().eq('id', id)
+    if (error) {
+      toast.error('Could not delete entry')
+    } else {
+      toast.success('Entry deleted')
+      setEntries(prev => prev.filter(e => e.id !== id))
+    }
+  }
+
   const wins    = entries.filter(e => e.outcome === 'win').length
   const losses  = entries.filter(e => e.outcome === 'loss').length
   const live    = entries.filter(e => e.outcome === 'live').length
@@ -186,7 +196,7 @@ export default function JournalPage() {
                   : 'OPEN'}
               </span>
               {/* Result column */}
-              <span>
+              <span className="flex items-center gap-1.5">
                 {e.outcome === 'live' ? (
                   <button
                     onClick={() => {
@@ -207,6 +217,12 @@ export default function JournalPage() {
                     {e.outcome === 'win' ? '✓ WIN' : e.outcome === 'loss' ? '✗ LOSS' : e.outcome === 'breakeven' ? '➡ BE' : '— SKIP'}
                   </span>
                 )}
+                <button
+                  onClick={() => deleteEntry(e.id)}
+                  className="text-[9px] text-[#333] hover:text-[var(--red)] transition-colors ml-1"
+                  title="Delete entry">
+                  🗑
+                </button>
               </span>
             </div>
 
