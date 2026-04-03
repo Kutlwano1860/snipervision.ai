@@ -165,7 +165,7 @@ export default function JournalPage() {
 
       {/* Table */}
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[12px] overflow-x-auto">
-        <div className="grid grid-cols-[70px_100px_55px_1fr_80px_80px_90px_110px] px-5 py-3 border-b border-[var(--border)] bg-[var(--surface2)]">
+        <div className="grid grid-cols-[70px_100px_55px_1fr_80px_80px_90px_130px] px-5 py-3 border-b border-[var(--border)] bg-[var(--surface2)]">
           {['DATE','ASSET','BIAS','STRATEGY','ENTRY','EXIT',`P&L (${homeCurrency})`,'RESULT'].map(h => (
             <span key={h} className="text-[8px] font-mono-tv font-bold tracking-widest text-[#777]">{h}</span>
           ))}
@@ -181,7 +181,7 @@ export default function JournalPage() {
         {entries.map(e => (
           <div key={e.id} className="border-b border-[var(--border)] last:border-0">
             {/* Main row */}
-            <div className="grid grid-cols-[70px_100px_55px_1fr_80px_80px_90px_110px] px-5 py-3.5 hover:bg-[var(--surface2)] transition-colors items-center text-[11px]">
+            <div className="grid grid-cols-[70px_100px_55px_1fr_80px_80px_90px_130px] px-5 py-3.5 hover:bg-[var(--surface2)] transition-colors items-center text-[11px]">
               <span className="text-[#777] font-mono-tv">{e.created_at?.substring(5,10)?.replace('-','/')}</span>
               <span className="font-bold font-mono-tv">{e.asset}</span>
               <span className={`font-bold text-[10px] ${e.bias === 'BULLISH' ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
@@ -219,9 +219,9 @@ export default function JournalPage() {
                 )}
                 <button
                   onClick={() => deleteEntry(e.id)}
-                  className="text-[9px] text-[#333] hover:text-[var(--red)] transition-colors ml-1"
+                  className="text-[10px] text-[#444] hover:text-[var(--red)] transition-colors px-1 py-0.5 rounded hover:bg-[rgba(239,68,68,0.1)]"
                   title="Delete entry">
-                  🗑
+                  ✕
                 </button>
               </span>
             </div>

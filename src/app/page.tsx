@@ -162,7 +162,7 @@ function DemoCard() {
         setIdx(i => (i + 1) % DEMO_SETUPS.length)
         setFading(false)
       }, 350)
-    }, 5000)
+    }, 30000)
     return () => clearInterval(t)
   }, [])
 
