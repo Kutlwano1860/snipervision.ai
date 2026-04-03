@@ -120,10 +120,22 @@ export default function CommunityPage() {
     }
   }, [loading, tab])
 
+  const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+  const MAX_SIZE_MB = 3
+
   function onImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error('Only JPG, PNG, WEBP or GIF allowed')
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      toast.error(`Image must be under ${MAX_SIZE_MB}MB`)
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
     setImageFile(file)
     setImagePreview(URL.createObjectURL(file))
   }
@@ -305,7 +317,7 @@ export default function CommunityPage() {
             className="w-9 h-9 flex-shrink-0 bg-[var(--surface2)] border border-[var(--border)] rounded-full flex items-center justify-center text-[14px] hover:border-[var(--green)] transition-colors">
             📎
           </button>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onImageChange} />
+          <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png,.webp,.gif" className="hidden" onChange={onImageChange} />
 
           <textarea
             ref={textareaRef}
