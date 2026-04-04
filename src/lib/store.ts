@@ -43,6 +43,7 @@ export const useAppStore = create<AppState>()(
       settings: {
         market: 'Auto Detect',
         strategy: 'ICT',
+        tradingStyle: 'Day Trader',
         riskAppetite: 'Conservative',
         entryMode: 'Standard',
         session: 'Auto Detect',

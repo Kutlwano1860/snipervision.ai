@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import { useAppStore } from '@/lib/store'
 import { CURRENCIES, TIER_LIMITS } from '@/lib/constants'
 import { createClient } from '@/lib/supabase/client'
-import type { AnalysisResult, Tier, AccountType, MarketType, Strategy, Session } from '@/types'
+import type { AnalysisResult, Tier, AccountType, MarketType, Strategy, Session, TradingStyle } from '@/types'
 
 // ── AI Market Summary Widget ──
 interface MarketSummary {
@@ -808,7 +808,6 @@ export default function DashboardPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Multi-timeframe charts (Platinum)
-  const mtfLabels = ['H4 Chart', 'H1 Chart', 'M15 Chart']
   const [mtfBase64, setMtfBase64] = useState<(string | null)[]>([null, null, null])
   const [mtfPreviews, setMtfPreviews] = useState<(string | null)[]>([null, null, null])
   const [mtfTypes, setMtfTypes] = useState<string[]>(['image/jpeg', 'image/jpeg', 'image/jpeg'])
@@ -831,11 +830,20 @@ export default function DashboardPage() {
     if (mtfRefs[idx].current) mtfRefs[idx].current!.value = ''
   }
 
-  const tier   = (profile?.tier || 'free') as Tier
-  const limit  = TIER_LIMITS[tier]
-  const isPlat = tier === 'platinum' || tier === 'diamond'
+  const tier    = (profile?.tier || 'free') as Tier
+  const limit   = TIER_LIMITS[tier]
+  const isPlat  = tier === 'platinum' || tier === 'diamond'
+  const isPrem  = tier === 'premium' || isPlat
   const homeCurrency    = profile?.home_currency || 'ZAR'
   const tradingCurrency = sessionTradingCurrency
+
+  // Dynamic MTF labels based on trading style (gated to Premium+)
+  const MTF_STYLE_LABELS: Record<TradingStyle, string[]> = {
+    'Scalper':     ['M1 Chart',  'M5 Chart',    'M15 Chart'],
+    'Day Trader':  ['M15 Chart', 'H1 Chart',    'H4 Chart'],
+    'Swing Trader':['H4 Chart',  'Daily Chart', 'Weekly Chart'],
+  }
+  const mtfLabels = MTF_STYLE_LABELS[settings.tradingStyle || 'Day Trader']
 
   function handleFile(file: File) {
     const reader = new FileReader()
@@ -1084,6 +1092,42 @@ export default function DashboardPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Trading Style — Premium+ only */}
+              {isPrem ? (
+                <div>
+                  <div className="text-[9px] font-bold tracking-widest font-mono-tv mb-2 flex items-center gap-1.5" style={{ color: 'var(--green)' }}>
+                    TRADING STYLE
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {([
+                      { id: 'Scalper',      icon: '⚡', desc: 'M1–M15' },
+                      { id: 'Day Trader',   icon: '🎯', desc: 'M15–H4' },
+                      { id: 'Swing Trader', icon: '📈', desc: 'H4–Weekly' },
+                    ] as { id: TradingStyle; icon: string; desc: string }[]).map(s => (
+                      <button key={s.id}
+                        onClick={() => updateSettings({ tradingStyle: s.id })}
+                        className={`py-2 border rounded-[7px] text-[10px] font-semibold flex flex-col items-center gap-0.5 transition-all
+                          ${(settings.tradingStyle || 'Day Trader') === s.id
+                            ? 'border-[var(--green)] bg-[var(--green-dim)] text-[var(--green)]'
+                            : 'border-[var(--border2)] text-[#777] hover:bg-[var(--surface2)]'}`}>
+                        <span className="text-base">{s.icon}</span>
+                        <span className="text-center leading-tight">{s.id}</span>
+                        <span className="text-[8px] opacity-60">{s.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-[var(--surface2)] border border-[var(--border)] rounded-[9px] p-3 flex items-center gap-2">
+                  <span className="text-[16px]">🎯</span>
+                  <div>
+                    <div className="text-[9px] font-bold text-[#777] tracking-widest font-mono-tv">TRADING STYLE</div>
+                    <div className="text-[9px] text-[#555] mt-0.5">Premium feature — choose Scalper, Day Trader or Swing Trader for dynamic timeframe labels</div>
+                  </div>
+                  <span className="ml-auto text-[8px] font-bold text-[var(--purple)] bg-[rgba(168,85,247,0.1)] border border-[rgba(168,85,247,0.3)] px-1.5 py-0.5 rounded-full whitespace-nowrap">PRO+</span>
+                </div>
+              )}
 
               {/* Account type */}
               <div>

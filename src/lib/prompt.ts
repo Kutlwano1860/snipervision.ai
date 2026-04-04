@@ -139,6 +139,7 @@ TRADER PROFILE
 - Account balance: ${tradingSymbol}${settings.accountBalance.toLocaleString()} (≈ ${homeSymbol}${balanceInHome.toLocaleString('en', { maximumFractionDigits: 0 })} ${settings.homeCurrency})
 - Risk per trade (1%): ${tradingSymbol}${riskAmount.toFixed(2)} (≈ ${homeSymbol}${riskInHome.toFixed(0)} ${settings.homeCurrency})
 - Selected strategy: ${strategyKey}
+- Trading style: ${settings.tradingStyle || 'Day Trader'} — adjust timeframe focus and holding period accordingly
 - Risk appetite: ${settings.riskAppetite}
 - Entry mode: ${settings.entryMode ?? 'Standard'}
 - Session: ${settings.session}

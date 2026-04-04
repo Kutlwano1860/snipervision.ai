@@ -86,6 +86,7 @@ export const PLANS: SubscriptionPlan[] = [
       { text: 'TP levels', included: false },
       { text: 'Lot sizing suggestions', included: false },
       { text: 'Fundamental / macro analysis', included: false },
+      { text: 'Trading style selector', included: false },
     ],
   },
   {
@@ -104,6 +105,7 @@ export const PLANS: SubscriptionPlan[] = [
       { text: 'Kill zone + psychological levels', included: true },
       { text: 'Economic event risk alerts', included: true },
       { text: 'Trade journal', included: true },
+      { text: 'Trading style selector (Scalper / Day Trader / Swing Trader)', included: true, highlight: true },
     ],
   },
   {

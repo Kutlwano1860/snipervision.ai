@@ -56,6 +56,7 @@ export interface UserProfile {
 export interface AnalysisSettings {
   market: MarketType
   strategy: Strategy
+  tradingStyle?: TradingStyle
   riskAppetite: 'Conservative' | 'Moderate' | 'Aggressive'
   entryMode: 'Aggressive' | 'Standard' | 'Comfortable'
   session: Session
