@@ -138,7 +138,7 @@ async function runAnalysis(
   writer: WritableStreamDefaultWriter<Uint8Array>
 ) {
   // ── 3. Check daily limit based on their tier ──
-  const tier = profile.tier as Tier
+  const tier = profile.tier.toLowerCase() as Tier
   const limit = TIER_LIMITS[tier]
   const today = new Date().toISOString().split('T')[0]
 
