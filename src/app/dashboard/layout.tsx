@@ -216,7 +216,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               const pct = limit >= 999 ? 100 : Math.min(100, Math.round((usedToday / limit) * 100))
               const barColor = pct >= 90 ? 'var(--red)' : pct >= 60 ? 'var(--amber)' : 'var(--green)'
               const homeCurr = CURRENCIES.find(c => c.code === (profile?.home_currency || 'ZAR'))
-              const tradeCurr = CURRENCIES.find(c => c.code === (profile?.default_trading_currency || 'GBP'))
+              const tradeCurr = CURRENCIES.find(c => c.code === (sessionTradingCurrency || profile?.default_trading_currency || 'GBP'))
               const balance = profile?.account_balance ?? 0
               const memberSince = profile?.created_at
                 ? new Date(profile.created_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
