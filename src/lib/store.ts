@@ -5,6 +5,16 @@ import type {
   Tier, Currency, AccountType
 } from '@/types'
 
+export type AccentColor = 'green' | 'blue' | 'purple' | 'amber' | 'red'
+
+export interface AppearancePrefs {
+  accentColor: AccentColor
+  compactMode: boolean
+  fontSize: 'small' | 'default' | 'large'
+  showMarketBrief: boolean
+  showKillZones: boolean
+}
+
 interface AppState {
   // User
   profile: UserProfile | null
@@ -13,6 +23,10 @@ interface AppState {
   // Analysis settings
   settings: AnalysisSettings
   updateSettings: (settings: Partial<AnalysisSettings>) => void
+
+  // Appearance
+  appearance: AppearancePrefs
+  updateAppearance: (prefs: Partial<AppearancePrefs>) => void
 
   // Current analysis
   currentAnalysis: AnalysisResult | null
@@ -55,6 +69,17 @@ export const useAppStore = create<AppState>()(
       updateSettings: (partial) =>
         set((state) => ({ settings: { ...state.settings, ...partial } })),
 
+      // Appearance
+      appearance: {
+        accentColor: 'green',
+        compactMode: false,
+        fontSize: 'default',
+        showMarketBrief: true,
+        showKillZones: true,
+      },
+      updateAppearance: (partial) =>
+        set((state) => ({ appearance: { ...state.appearance, ...partial } })),
+
       // Analysis
       currentAnalysis: null,
       setCurrentAnalysis: (analysis) => set({ currentAnalysis: analysis }),
@@ -87,6 +112,7 @@ export const useAppStore = create<AppState>()(
       name: 'tradevision-store',
       partialize: (state) => ({
         settings: state.settings,
+        appearance: state.appearance,
         sessionTradingCurrency: state.sessionTradingCurrency,
       }),
     }

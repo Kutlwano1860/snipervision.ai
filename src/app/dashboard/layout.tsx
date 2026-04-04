@@ -129,12 +129,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const tier = (profile?.tier || 'free') as Tier
 
   const tabs = [
-    { label: 'Analyse', href: '/dashboard' },
-    { label: 'Journal', href: '/dashboard/journal' },
-    { label: 'History', href: '/dashboard/history' },
+    { label: 'Analyse',   href: '/dashboard' },
+    { label: 'Journal',   href: '/dashboard/journal' },
+    { label: 'History',   href: '/dashboard/history' },
     { label: 'Community', href: '/dashboard/community' },
     { label: 'Watchlist', href: '/dashboard/watchlist' },
-    { label: 'Broker', href: '/dashboard/broker' },
+    { label: 'Settings',  href: '/dashboard/settings' },
   ]
 
   const tacCurrencies: Currency[] = ['USD', 'GBP', 'EUR', 'AUD', 'ZAR', 'CAD', 'JPY', 'CHF', 'NZD']
@@ -167,7 +167,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Currency indicator — desktop only */}
           <div className="hidden lg:flex items-center gap-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-md px-2.5 py-1 text-[10px] font-mono-tv">
             <span className="text-[#777]">
-              {CURRENCIES.find(c => c.code === (profile?.home_currency || 'ZAR'))?.flag} {profile?.home_currency || 'ZAR'}
+              {CURRENCIES.find(c => c.code === (profile?.home_currency || DEFAULT_HOME_CURRENCY))?.flag} {profile?.home_currency || DEFAULT_HOME_CURRENCY}
             </span>
             <span className="text-[var(--border2)]">|</span>
             <button onClick={() => setShowTacModal(true)}
@@ -215,8 +215,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               const usedToday = profile?.last_analysis_date === new Date().toISOString().split('T')[0] ? used : 0
               const pct = limit >= 999 ? 100 : Math.min(100, Math.round((usedToday / limit) * 100))
               const barColor = pct >= 90 ? 'var(--red)' : pct >= 60 ? 'var(--amber)' : 'var(--green)'
-              const homeCurr = CURRENCIES.find(c => c.code === (profile?.home_currency || 'ZAR'))
-              const tradeCurr = CURRENCIES.find(c => c.code === (sessionTradingCurrency || profile?.default_trading_currency || 'GBP'))
+              const homeCurr = CURRENCIES.find(c => c.code === (profile?.home_currency || DEFAULT_HOME_CURRENCY))
+              const tradeCurr = CURRENCIES.find(c => c.code === (sessionTradingCurrency || profile?.default_trading_currency || DEFAULT_TRADING_CURRENCY))
               const balance = profile?.account_balance ?? 0
               const memberSince = profile?.created_at
                 ? new Date(profile.created_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
@@ -285,6 +285,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     className="w-full text-left px-4 py-2.5 text-[12px] text-[#999] hover:text-white hover:bg-[var(--surface2)] transition-colors flex items-center gap-2">
                     🚀 Upgrade Plan
                   </button>
+                  <Link href="/dashboard/settings"
+                    onClick={() => setShowProfileMenu(false)}
+                    className="w-full text-left px-4 py-2.5 text-[12px] text-[#999] hover:text-white hover:bg-[var(--surface2)] transition-colors flex items-center gap-2">
+                    ⚙️ Settings
+                  </Link>
                   <button
                     onClick={() => { setShowProfileMenu(false); handleLogout() }}
                     className="w-full text-left px-4 py-2.5 text-[12px] text-[var(--red)] hover:bg-[rgba(239,68,68,0.08)] transition-colors flex items-center gap-2">
@@ -306,12 +311,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgba(8,8,8,0.96)] border-t border-[var(--border)] backdrop-blur-xl safe-area-pb">
         <div className="flex overflow-x-auto scrollbar-hide">
           {[
-            { label: 'Analyse', href: '/dashboard', icon: '⚡' },
-            { label: 'Journal', href: '/dashboard/journal', icon: '📒' },
-            { label: 'History', href: '/dashboard/history', icon: '🕐' },
+            { label: 'Analyse',   href: '/dashboard',           icon: '⚡' },
+            { label: 'Journal',   href: '/dashboard/journal',   icon: '📒' },
+            { label: 'History',   href: '/dashboard/history',   icon: '🕐' },
             { label: 'Community', href: '/dashboard/community', icon: '💬' },
             { label: 'Watchlist', href: '/dashboard/watchlist', icon: '📈' },
-            { label: 'Broker', href: '/dashboard/broker', icon: '⚙️' },
+            { label: 'Settings',  href: '/dashboard/settings',  icon: '⚙️' },
           ].map(t => (
             <Link key={t.href} href={t.href}
               className={`flex-1 min-w-[56px] flex flex-col items-center py-2.5 gap-0.5 transition-colors

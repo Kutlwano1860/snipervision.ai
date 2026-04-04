@@ -107,6 +107,109 @@ function MarketSummaryWidget() {
   )
 }
 
+// ── Kill Zone / Session Timing Widget ──
+const KILL_ZONES = [
+  { name: 'Asian',       emoji: '🌏', utc: '00:00–04:00', sast: '02:00–06:00', startH: 0,  endH: 4,  pairs: ['USD/JPY','EUR/JPY','AUD/USD'],     color: '#60a5fa' },
+  { name: 'London',      emoji: '🇬🇧', utc: '07:00–10:00', sast: '09:00–12:00', startH: 7,  endH: 10, pairs: ['EUR/USD','GBP/USD','EUR/GBP'],      color: 'var(--green)' },
+  { name: 'NY Open',     emoji: '🗽', utc: '12:00–15:00', sast: '14:00–17:00', startH: 12, endH: 15, pairs: ['EUR/USD','XAU/USD','USD/JPY'],      color: '#f59e0b' },
+  { name: 'LDN/NY',      emoji: '⚡', utc: '12:00–14:00', sast: '14:00–16:00', startH: 12, endH: 14, pairs: ['ALL MAJORS','XAU/USD'],             color: '#f97316', prime: true },
+]
+
+function KillZoneWidget() {
+  const [now, setNow] = useState(() => new Date())
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30_000)
+    return () => clearInterval(t)
+  }, [])
+
+  const utcH = now.getUTCHours() + now.getUTCMinutes() / 60
+
+  function minsUntil(startH: number) {
+    const diff = ((startH - utcH) * 60 + 1440) % 1440
+    return Math.round(diff)
+  }
+
+  const active = KILL_ZONES.filter(z => utcH >= z.startH && utcH < z.endH)
+  const next   = [...KILL_ZONES]
+    .filter(z => utcH < z.startH || utcH >= z.endH)
+    .sort((a, b) => minsUntil(a.startH) - minsUntil(b.startH))[0]
+
+  const statusText = active.length > 0
+    ? `${active.map(z => z.name).join(' + ')} — ACTIVE 🟢`
+    : next
+      ? (() => { const m = minsUntil(next.startH); return `Next: ${next.name} in ${m >= 60 ? `${Math.floor(m/60)}h ${m%60}m` : `${m}m`}` })()
+      : 'Between sessions'
+
+  const utcTime  = now.toLocaleTimeString('en-GB', { timeZone:'UTC',            hour:'2-digit', minute:'2-digit' })
+  const sastTime = now.toLocaleTimeString('en-GB', { timeZone:'Africa/Johannesburg', hour:'2-digit', minute:'2-digit' })
+
+  return (
+    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[12px] mb-4 overflow-hidden">
+      <button onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-[var(--surface2)] transition-colors text-left">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="text-[11px] font-mono-tv font-bold tracking-widest text-[#777] whitespace-nowrap">⏰ KILL ZONES</span>
+          <span className={`text-[10px] font-semibold truncate ${active.length ? 'text-[var(--green)]' : 'text-[#888]'}`}>
+            {statusText}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+          <span className="hidden sm:block text-[9px] font-mono-tv text-[#555]">
+            UTC {utcTime} · SAST {sastTime}
+          </span>
+          <span className="text-[10px] text-[#555]">{open ? '▲' : '▼'}</span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-[var(--border)] px-4 pb-4 pt-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
+            {KILL_ZONES.map(z => {
+              const isActive = utcH >= z.startH && utcH < z.endH
+              const mins     = minsUntil(z.startH)
+              const isPast   = utcH >= z.endH
+              return (
+                <div key={z.name}
+                  className={`rounded-[10px] p-3 border transition-all ${isActive ? 'border-opacity-60' : 'border-[var(--border)]'}`}
+                  style={isActive ? { background: z.color + '14', borderColor: z.color + '55' } : { background: 'var(--surface2)' }}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[12px]">{z.emoji}</span>
+                    {isActive ? (
+                      <span className="text-[7px] font-bold font-mono-tv px-1.5 py-0.5 rounded-full"
+                        style={{ color: z.color, background: z.color + '20' }}>LIVE</span>
+                    ) : (
+                      <span className="text-[7px] text-[#555] font-mono-tv">
+                        {isPast && mins > 1200 ? 'tmrw' : `in ${mins >= 60 ? `${Math.floor(mins/60)}h` : `${mins}m`}`}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] font-bold text-white mb-0.5 flex items-center gap-1">
+                    {z.name}
+                    {'prime' in z && z.prime && <span className="text-[7px] font-bold text-[#f97316] bg-[rgba(249,115,22,0.15)] px-1 rounded">PRIME</span>}
+                  </div>
+                  <div className="text-[8px] font-mono-tv text-[#555] mb-2">{z.sast} SAST · {z.utc} UTC</div>
+                  <div className="flex flex-wrap gap-1">
+                    {z.pairs.map(p => (
+                      <span key={p} className="text-[7px] font-mono-tv px-1 py-0.5 rounded border border-[var(--border)] text-[#888]">{p}</span>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-y-1 gap-x-4 text-[9px] text-[#555] font-mono-tv border-t border-[var(--border)] pt-2">
+            <span className="whitespace-nowrap">🕐 UTC {utcTime} · SAST {sastTime}</span>
+            <span>💡 Scan 15–30 min <em>before</em> each open, execute when kill zone fires</span>
+            <span className="whitespace-nowrap">⚡ LDN/NY overlap (14:00–16:00 SAST) = highest volume</span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Loading Overlay ──
 function LoadingOverlay({ show, currentStep }: { show: boolean; currentStep?: string }) {
   if (!show) return null
@@ -992,6 +1095,7 @@ export default function DashboardPage() {
       <LoadingOverlay show={isAnalysing} currentStep={streamStep} />
 
       <div className="p-4 md:p-6 max-w-[1200px] mx-auto">
+        <KillZoneWidget />
         <MarketSummaryWidget />
 
         {/* Risk Caution Banner */}

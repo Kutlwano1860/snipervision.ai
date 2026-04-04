@@ -83,7 +83,10 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <div className="text-[10px] font-bold text-[#777] tracking-widest font-mono-tv mb-1.5">PASSWORD</div>
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="text-[10px] font-bold text-[#777] tracking-widest font-mono-tv">PASSWORD</div>
+                <Link href="/forgot-password" className="text-[10px] text-[#555] hover:text-[var(--green)] transition-colors">Forgot password?</Link>
+              </div>
               <input
                 className="tv-input"
                 type="password"

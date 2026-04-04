@@ -58,13 +58,19 @@ export default function JournalPage() {
   }
 
   async function deleteEntry(id: string) {
+    // Find the analysis_id before deleting so we can cascade to analyses table
+    const entry = entries.find(e => e.id === id)
     const { error } = await supabase.from('journal_entries').delete().eq('id', id)
     if (error) {
       toast.error('Could not delete entry')
-    } else {
-      toast.success('Entry deleted')
-      setEntries(prev => prev.filter(e => e.id !== id))
+      return
     }
+    // Also delete the linked analysis from history
+    if (entry?.analysis_id) {
+      await supabase.from('analyses').delete().eq('id', entry.analysis_id)
+    }
+    toast.success('Entry deleted')
+    setEntries(prev => prev.filter(e => e.id !== id))
   }
 
   const wins    = entries.filter(e => e.outcome === 'win').length
@@ -185,23 +191,19 @@ export default function JournalPage() {
                   </div>
                   <div className="text-[10px] text-[#777] font-mono-tv mt-0.5">{e.created_at?.substring(0,10)} · {e.strategy}</div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {e.outcome === 'live' ? (
-                    <button onClick={() => { setExitPrice(''); setPnlInput(''); setEditingId(editingId === e.id ? null : e.id) }}
-                      disabled={savingId === e.id}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[8px] font-bold font-mono-tv bg-[rgba(59,130,246,0.12)] text-[var(--blue)] border border-[rgba(59,130,246,0.25)]">
-                      {savingId === e.id ? '...' : '⏳ LIVE ✎'}
-                    </button>
-                  ) : (
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[8px] font-bold font-mono-tv
-                      ${e.outcome === 'win' ? 'bg-[var(--green-dim)] text-[var(--green)]'
-                      : e.outcome === 'loss' ? 'bg-[rgba(239,68,68,0.12)] text-[var(--red)]'
-                      : e.outcome === 'breakeven' ? 'bg-[rgba(245,158,11,0.12)] text-[var(--amber)]'
-                      : 'bg-[rgba(107,114,128,0.12)] text-[#777]'}`}>
-                      {e.outcome === 'win' ? '✓ WIN' : e.outcome === 'loss' ? '✗ LOSS' : e.outcome === 'breakeven' ? '➡ BE' : '— SKIP'}
-                    </span>
-                  )}
-                  <button onClick={() => deleteEntry(e.id)} className="text-[11px] text-[#444] hover:text-[var(--red)] transition-colors px-1">✕</button>
+                <div className="flex items-center gap-1.5">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[8px] font-bold font-mono-tv
+                    ${e.outcome === 'live'      ? 'bg-[rgba(59,130,246,0.12)] text-[var(--blue)]'
+                    : e.outcome === 'win'       ? 'bg-[var(--green-dim)] text-[var(--green)]'
+                    : e.outcome === 'loss'      ? 'bg-[rgba(239,68,68,0.12)] text-[var(--red)]'
+                    : e.outcome === 'breakeven' ? 'bg-[rgba(245,158,11,0.12)] text-[var(--amber)]'
+                    : 'bg-[rgba(107,114,128,0.12)] text-[#777]'}`}>
+                    {e.outcome === 'live' ? '⏳ LIVE' : e.outcome === 'win' ? '✓ WIN' : e.outcome === 'loss' ? '✗ LOSS' : e.outcome === 'breakeven' ? '➡ BE' : '— SKIP'}
+                  </span>
+                  <button onClick={() => { setExitPrice(e.exit_price || ''); setPnlInput(e.pnl_home_currency != null ? String(e.pnl_home_currency) : ''); setEditingId(editingId === e.id ? null : e.id) }}
+                    disabled={savingId === e.id}
+                    className="text-[11px] text-[#555] hover:text-white transition-colors px-0.5" title="Edit trade">✎</button>
+                  <button onClick={() => deleteEntry(e.id)} className="text-[11px] text-[#444] hover:text-[var(--red)] transition-colors px-0.5">✕</button>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -281,37 +283,28 @@ export default function JournalPage() {
                   : 'OPEN'}
               </span>
               {/* Result column */}
-              <span className="flex items-center gap-1.5">
-                {e.outcome === 'live' ? (
-                  <button
-                    onClick={() => {
-                      setExitPrice('')
-                      setPnlInput('')
-                      setEditingId(editingId === e.id ? null : e.id)
-                    }}
-                    disabled={savingId === e.id}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[8px] font-bold font-mono-tv bg-[rgba(59,130,246,0.12)] text-[var(--blue)] hover:bg-[rgba(59,130,246,0.22)] transition-colors border border-[rgba(59,130,246,0.25)] cursor-pointer">
-                    {savingId === e.id ? '...' : '⏳ LIVE ✎'}
-                  </button>
-                ) : (
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[8px] font-bold font-mono-tv
-                    ${e.outcome === 'win'       ? 'bg-[var(--green-dim)] text-[var(--green)]'
-                    : e.outcome === 'loss'      ? 'bg-[rgba(239,68,68,0.12)] text-[var(--red)]'
-                    : e.outcome === 'breakeven' ? 'bg-[rgba(245,158,11,0.12)] text-[var(--amber)]'
-                    : 'bg-[rgba(107,114,128,0.12)] text-[#777]'}`}>
-                    {e.outcome === 'win' ? '✓ WIN' : e.outcome === 'loss' ? '✗ LOSS' : e.outcome === 'breakeven' ? '➡ BE' : '— SKIP'}
-                  </span>
-                )}
+              <span className="flex items-center gap-1">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[8px] font-bold font-mono-tv
+                  ${e.outcome === 'live'      ? 'bg-[rgba(59,130,246,0.12)] text-[var(--blue)]'
+                  : e.outcome === 'win'       ? 'bg-[var(--green-dim)] text-[var(--green)]'
+                  : e.outcome === 'loss'      ? 'bg-[rgba(239,68,68,0.12)] text-[var(--red)]'
+                  : e.outcome === 'breakeven' ? 'bg-[rgba(245,158,11,0.12)] text-[var(--amber)]'
+                  : 'bg-[rgba(107,114,128,0.12)] text-[#777]'}`}>
+                  {e.outcome === 'live' ? '⏳ LIVE' : e.outcome === 'win' ? '✓ WIN' : e.outcome === 'loss' ? '✗ LOSS' : e.outcome === 'breakeven' ? '➡ BE' : '— SKIP'}
+                </span>
+                <button
+                  onClick={() => { setExitPrice(e.exit_price || ''); setPnlInput(e.pnl_home_currency != null ? String(e.pnl_home_currency) : ''); setEditingId(editingId === e.id ? null : e.id) }}
+                  disabled={savingId === e.id}
+                  className="text-[10px] text-[#555] hover:text-white transition-colors px-1 py-0.5 rounded hover:bg-[var(--surface3)]"
+                  title="Edit trade">✎</button>
                 <button
                   onClick={() => deleteEntry(e.id)}
                   className="text-[10px] text-[#444] hover:text-[var(--red)] transition-colors px-1 py-0.5 rounded hover:bg-[rgba(239,68,68,0.1)]"
-                  title="Delete entry">
-                  ✕
-                </button>
+                  title="Delete entry">✕</button>
               </span>
             </div>
 
-            {/* Full-width edit panel — expands below the row when LIVE ✎ is clicked */}
+            {/* Full-width edit panel — expands below the row for any trade */}
             {editingId === e.id && (
               <div className="px-5 pb-4 bg-[var(--surface2)] border-t border-[var(--border)]">
                 <div className="flex flex-wrap items-end gap-3 pt-3">
