@@ -8,7 +8,7 @@ export default function PrivacyPage() {
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="text-[var(--green)]">
             <polyline points="1,14 6,8 10,11 15,4 19,7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          TradeVision AI
+          SniperVision AI
         </Link>
         <Link href="/" className="text-[12px] text-[#777] hover:text-white transition-colors">← Back to Home</Link>
       </nav>
@@ -24,7 +24,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-[16px] font-bold text-white mb-2">1. Information We Collect</h2>
-            <p className="mb-3">We collect the following information when you use TradeVision AI:</p>
+            <p className="mb-3">We collect the following information when you use SniperVision AI:</p>
             <ul className="flex flex-col gap-2">
               {[
                 'Account information: name, email address, and password (hashed)',
@@ -62,7 +62,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-[16px] font-bold text-white mb-2">3. Chart Images</h2>
-            <p>Chart images you upload are sent to the Anthropic Claude API for analysis and are <strong className="text-white">not permanently stored</strong> by TradeVision AI. Images are processed in memory for the duration of the analysis request only. Please refer to <a href="https://www.anthropic.com/privacy" target="_blank" rel="noreferrer" className="text-[var(--green)] hover:underline">Anthropic's Privacy Policy</a> for how they handle API inputs.</p>
+            <p>Chart images you upload are sent to the Anthropic Claude API for analysis and are <strong className="text-white">not permanently stored</strong> by SniperVision AI. Images are processed in memory for the duration of the analysis request only. Please refer to <a href="https://www.anthropic.com/privacy" target="_blank" rel="noreferrer" className="text-[var(--green)] hover:underline">Anthropic's Privacy Policy</a> for how they handle API inputs.</p>
           </section>
 
           <section>

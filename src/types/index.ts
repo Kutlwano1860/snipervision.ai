@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────
-// TRADEVISION AI — Core Types
+// SniperVision AI — Core Types
 // ─────────────────────────────────────────────
 
 export type Tier = 'free' | 'premium' | 'platinum' | 'diamond'

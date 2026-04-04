@@ -107,7 +107,7 @@ export default function HowToUsePage() {
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="text-[var(--green)]">
             <polyline points="1,14 6,8 10,11 15,4 19,7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          TradeVision AI
+          SniperVision AI
         </Link>
         <Link href="/register" className="btn-primary text-[12px] px-4 py-1.5 rounded-lg">Get Started Free →</Link>
       </nav>
@@ -119,7 +119,7 @@ export default function HowToUsePage() {
           <div className="inline-flex items-center gap-2 bg-[var(--green-dim)] border border-[var(--green-border)] text-[var(--green)] px-4 py-1.5 rounded-full text-[11px] font-bold mb-6 font-mono-tv tracking-wider">
             📖 USER GUIDE
           </div>
-          <h1 className="text-[clamp(32px,5vw,52px)] font-black tracking-tight mb-4">How to Use TradeVision AI</h1>
+          <h1 className="text-[clamp(32px,5vw,52px)] font-black tracking-tight mb-4">How to Use SniperVision AI</h1>
           <p className="text-[15px] text-[#777] max-w-[520px] mx-auto leading-relaxed">
             Get the most out of every analysis. Follow these steps to go from a chart screenshot to a complete, actionable trade plan.
           </p>
@@ -195,7 +195,7 @@ export default function HowToUsePage() {
             <div>
               <div className="text-[13px] font-bold text-[var(--amber)] mb-1">Important Risk Reminder</div>
               <p className="text-[12px] text-[#aaa] leading-relaxed">
-                TradeVision AI provides educational analysis — it is not financial advice and is not 100% accurate. Always apply your own judgement, use proper risk management, and never risk more than you can afford to lose. <strong className="text-white">Once you have hit your daily profit target, stop trading.</strong> Protect your gains and come back tomorrow with a clear head.
+                SniperVision AI provides educational analysis — it is not financial advice and is not 100% accurate. Always apply your own judgement, use proper risk management, and never risk more than you can afford to lose. <strong className="text-white">Once you have hit your daily profit target, stop trading.</strong> Protect your gains and come back tomorrow with a clear head.
               </p>
             </div>
           </div>

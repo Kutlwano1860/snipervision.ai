@@ -118,7 +118,7 @@ export default function BrokerPage() {
   const APP_URL = typeof window !== 'undefined' ? window.location.origin : 'https://your-app.netlify.app'
 
   const mt4Code = `//+------------------------------------------------------------------+
-//| TradeVision AI Sync EA — MT4 (.mq4)                             |
+//| SniperVision AI Sync EA — MT4 (.mq4)                             |
 //| 1. Save as TradeVisionSync.mq4 in MT4/MQL4/Experts/             |
 //| 2. Replace PASTE_YOUR_TOKEN_HERE with your token                 |
 //| 3. Compile F7, drag onto any chart, enable WebRequest            |
@@ -170,7 +170,7 @@ void SyncData() {
 }`
 
   const mt5Code = `//+------------------------------------------------------------------+
-//| TradeVision AI Sync EA — MT5 (.mq5)                             |
+//| SniperVision AI Sync EA — MT5 (.mq5)                             |
 //| 1. Save as TradeVisionSync.mq5 in MT5/MQL5/Experts/             |
 //| 2. Replace PASTE_YOUR_TOKEN_HERE with your token                 |
 //| 3. Compile F7, drag onto any chart, enable WebRequest            |

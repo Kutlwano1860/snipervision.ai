@@ -1,4 +1,4 @@
-# TradeVision AI
+# SniperVision AI
 
 AI-powered trading analysis platform. Upload any chart screenshot and get institutional-grade analysis, smart lot sizing, live market context, and a complete trade plan — in seconds.
 
@@ -197,4 +197,4 @@ Tier is stored in Supabase `profiles.tier` and checked server-side on every API 
 
 ---
 
-*TradeVision AI provides educational analysis only. Not financial advice.*
+*SniperVision AI provides educational analysis only. Not financial advice.*

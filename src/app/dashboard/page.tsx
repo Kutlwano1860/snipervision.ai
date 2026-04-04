@@ -122,7 +122,7 @@ function LoadingOverlay({ show, currentStep }: { show: boolean; currentStep?: st
   ]
   return (
     <div className="fixed inset-0 bg-[rgba(8,8,8,0.96)] z-50 flex flex-col items-center justify-center gap-5 backdrop-blur-xl">
-      <div className="text-[20px] font-extrabold text-[var(--green)] tracking-tight">TradeVision AI</div>
+      <div className="text-[20px] font-extrabold text-[var(--green)] tracking-tight">SniperVision AI</div>
       <div className="text-[11px] text-[#777] font-mono-tv tracking-widest">PROCESSING YOUR CHART...</div>
       <div className="w-[240px] h-[2px] bg-[var(--border2)] rounded-full overflow-hidden">
         <div className="h-full bg-[var(--green)] rounded-full animate-load-bar" />

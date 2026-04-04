@@ -1,5 +1,5 @@
 -- ─────────────────────────────────────────────
--- TRADEVISION AI — Supabase Schema
+-- SniperVision AI — Supabase Schema
 -- Paste this entire file into your Supabase SQL Editor and run it
 -- ─────────────────────────────────────────────
 
