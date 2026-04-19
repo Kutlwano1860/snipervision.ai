@@ -93,6 +93,7 @@ create table public.journal_entries (
   outcome text default 'live',
   taken_trade boolean default true,
   notes text,
+  mode text default 'normal',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -125,6 +126,40 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- ── CHALLENGE SESSIONS ──
+create table if not exists public.challenge_sessions (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  label text default 'My Challenge',
+  start_balance numeric not null,
+  daily_target_pct numeric not null,
+  total_days integer not null,
+  current_day integer default 0,
+  current_balance numeric,
+  currency text default 'USD',
+  risk_per_trade numeric,
+  status text default 'active',
+  started_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  ends_at timestamp with time zone,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.challenge_sessions enable row level security;
+create policy "Users can manage own challenges" on public.challenge_sessions for all using (auth.uid() = user_id);
+
+-- ── USER BADGES ──
+create table if not exists public.user_badges (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  badge_id text not null,
+  earned_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  unique(user_id, badge_id)
+);
+
+alter table public.user_badges enable row level security;
+create policy "Users can view own badges" on public.user_badges for select using (auth.uid() = user_id);
+create policy "Users can insert own badges" on public.user_badges for insert with check (auth.uid() = user_id);
 
 -- ── RESET DAILY ANALYSES (run via cron) ──
 create or replace function public.reset_daily_analyses()

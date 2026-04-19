@@ -23,9 +23,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
-  const { profile, setProfile, clearSession, sessionTradingCurrency, setSessionTradingCurrency, setDailyUsed } = useAppStore() // eslint-disable-line
+  const { profile, setProfile, clearSession, sessionTradingCurrency, setSessionTradingCurrency, setDailyUsed, activeMode, setActiveMode, appearance } = useAppStore() // eslint-disable-line
+
+  // Apply theme to document root
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', appearance.theme || 'dark')
+  }, [appearance.theme])
   const [showTacModal, setShowTacModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const tacDialogRef = useRef<HTMLDialogElement>(null)
+  const upgradeDialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    if (showTacModal) tacDialogRef.current?.showModal()
+    else tacDialogRef.current?.close()
+  }, [showTacModal])
+
+  useEffect(() => {
+    if (showUpgradeModal) upgradeDialogRef.current?.showModal()
+    else upgradeDialogRef.current?.close()
+  }, [showUpgradeModal])
   const [selectedTier, setSelectedTier] = useState<Tier>('premium')
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -142,7 +159,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex flex-col min-h-screen">
       {/* App Nav */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-7 h-14 border-b border-[var(--border)] bg-[rgba(8,8,8,0.96)] backdrop-blur-xl">
+      <nav className="tv-nav sticky top-0 z-50 flex items-center justify-between px-4 md:px-7 h-14 border-b border-[var(--border)] bg-[rgba(8,8,8,0.96)] backdrop-blur-xl">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <img src="/SniperVision.Ai.png" alt="SniperVision.AI" className="w-8 h-8 rounded-lg object-cover" />
@@ -302,13 +319,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </nav>
 
+      {/* Mode Switcher Bar — only on Analyse + Journal pages */}
+      {(pathname === '/dashboard' || pathname === '/dashboard/journal') && (
+        <div className="tv-nav sticky top-14 z-40 border-b border-[var(--border)] bg-[rgba(8,8,8,0.96)] backdrop-blur-xl">
+          <div className="flex items-center justify-center gap-1 px-4 py-1.5">
+            {([
+              { mode: 'normal',    label: 'Normal',    icon: '📊' },
+              { mode: 'prop',      label: 'Prop Firm', icon: '🏢' },
+              { mode: 'challenge', label: 'Challenge', icon: '⚔️' },
+            ] as { mode: 'normal' | 'prop' | 'challenge'; label: string; icon: string }[]).map(({ mode, label, icon }) => (
+              <button
+                key={mode}
+                onClick={() => setActiveMode(mode)}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-[8px] text-[11px] sm:text-[12px] font-bold transition-all whitespace-nowrap
+                  ${activeMode === mode
+                    ? 'bg-[var(--surface3)] text-white border border-[var(--border2)]'
+                    : 'text-[#555] hover:text-[#999]'}`}>
+                <span>{icon}</span>
+                <span className="sm:inline hidden">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Page content */}
       <main className="flex-1 pb-16 lg:pb-0">
         {children}
       </main>
 
       {/* Bottom Navigation — mobile + tablet (hidden on desktop lg+) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgba(8,8,8,0.96)] border-t border-[var(--border)] backdrop-blur-xl safe-area-pb">
+      <nav className="tv-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgba(8,8,8,0.96)] border-t border-[var(--border)] backdrop-blur-xl safe-area-pb">
         <div className="flex overflow-x-auto scrollbar-hide">
           {[
             { label: 'Analyse',   href: '/dashboard',           icon: '⚡' },
@@ -329,73 +370,59 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
 
       {/* Trading Account Currency Modal */}
-      {showTacModal && (
-        <div className="fixed inset-0 bg-[rgba(8,8,8,0.9)] z-50 flex items-center justify-center backdrop-blur-lg p-4"
-          onClick={() => setShowTacModal(false)}>
-          <div className="bg-[var(--surface)] border border-[var(--border2)] rounded-[18px] p-8 max-w-[420px] w-full animate-fade-up"
-            onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowTacModal(false)}
-              className="absolute top-3 right-3 w-7 h-7 bg-[var(--surface3)] border border-[var(--border)] rounded-md text-[#777] flex items-center justify-center text-xs hover:text-white">✕</button>
-            <h3 className="text-[22px] font-extrabold tracking-tight mb-2">Switch Trading Account</h3>
-            <p className="text-[12px] text-[#777] mb-5 leading-relaxed">
-              Select which broker account currency you're trading with <strong className="text-white">today</strong>. Your home currency ({profile?.home_currency || 'ZAR'}) stays the same — P&L shown in both.
-            </p>
-            <div className="grid grid-cols-3 gap-2 mb-5">
-              {tacCurrencies.map(code => {
-                const c = CURRENCIES.find(x => x.code === code)!
-                return (
-                  <button key={code}
-                    onClick={() => { setSessionTradingCurrency(code); setShowTacModal(false); toast.success(`Trading account switched to ${code}`) }}
-                    className={`py-2.5 border rounded-[8px] text-[12px] font-bold transition-all
-                      ${sessionTradingCurrency === code
-                        ? 'border-[var(--green)] bg-[var(--green-dim)] text-[var(--green)]'
-                        : 'border-[var(--border2)] text-[#777] hover:bg-[var(--surface2)]'}`}>
-                    {c.flag} {code}
-                  </button>
-                )
-              })}
-            </div>
-            <p className="text-[11px] text-[#777]">💡 Your default trading currency is saved in your profile settings.</p>
-          </div>
+      <dialog ref={tacDialogRef} className="p-8 max-w-[420px]"
+        onClick={e => { if (e.target === tacDialogRef.current) setShowTacModal(false) }}
+        onCancel={() => setShowTacModal(false)}>
+        <button onClick={() => setShowTacModal(false)}
+          className="absolute top-3 right-3 w-7 h-7 bg-[var(--surface3)] border border-[var(--border)] rounded-md text-[#777] flex items-center justify-center text-xs hover:text-white">✕</button>
+        <h3 className="text-[22px] font-extrabold tracking-tight mb-2">Switch Trading Account</h3>
+        <p className="text-[12px] text-[#777] mb-5 leading-relaxed">
+          Select which broker account currency you're trading with <strong className="text-white">today</strong>. Your home currency ({profile?.home_currency || 'ZAR'}) stays the same — P&L shown in both.
+        </p>
+        <div className="grid grid-cols-3 gap-2 mb-5">
+          {tacCurrencies.map(code => {
+            const c = CURRENCIES.find(x => x.code === code)!
+            return (
+              <button key={code}
+                onClick={() => { setSessionTradingCurrency(code); setShowTacModal(false); toast.success(`Trading account switched to ${code}`) }}
+                className={`py-2.5 border rounded-[8px] text-[12px] font-bold transition-all
+                  ${sessionTradingCurrency === code
+                    ? 'border-[var(--green)] bg-[var(--green-dim)] text-[var(--green)]'
+                    : 'border-[var(--border2)] text-[#777] hover:bg-[var(--surface2)]'}`}>
+                {c.flag} {code}
+              </button>
+            )
+          })}
         </div>
-      )}
+        <p className="text-[11px] text-[#777]">💡 Your default trading currency is saved in your profile settings.</p>
+      </dialog>
 
       {/* Upgrade Modal */}
-      {showUpgradeModal && (
-        <div className="fixed inset-0 bg-[rgba(8,8,8,0.9)] z-50 flex items-center justify-center backdrop-blur-lg p-4"
-          onClick={() => setShowUpgradeModal(false)}>
-          <div className="bg-[var(--surface)] border border-[var(--border2)] rounded-[18px] p-8 max-w-[440px] w-full animate-fade-up"
-            onClick={e => e.stopPropagation()}>
-            <h3 className="text-[22px] font-extrabold tracking-tight mb-2">🚀 Unlock More Power</h3>
-            <p className="text-[12px] text-[#777] mb-5">Upgrade to access deeper analysis, live market data, macro intelligence, and more.</p>
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {(['premium', 'platinum', 'diamond', 'free'] as Tier[]).map(t => {
-                const prices: Record<Tier, string> = { free: '$0', premium: '$19.99', platinum: '$49.99', diamond: '$149.99' }
-                return (
-                  <button key={t} onClick={() => setSelectedTier(t)}
-                    className={`p-3 border-2 rounded-[10px] text-center transition-all
-                      ${selectedTier === t ? 'border-[var(--green)]' : 'border-[var(--border)]'}`}>
-                    <div className="text-[18px] mb-1">{TIER_ICONS[t]}</div>
-                    <div className="text-[9px] font-mono-tv font-bold tracking-wider" style={{ color: TIER_TEXT[t] }}>{t.toUpperCase()}</div>
-                    <div className="text-[15px] font-extrabold" style={{ color: TIER_TEXT[t] }}>{prices[t]}</div>
-                  </button>
-                )
-              })}
-            </div>
-            {/* TODO: Stripe integration
-                  1. Add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to .env.local
-                  2. Add STRIPE_SECRET_KEY to .env.local
-                  3. Create /api/stripe/checkout route that calls stripe.checkout.sessions.create()
-                  4. Create /api/webhooks/stripe route to handle subscription updates
-                  5. Replace the toast below with: router.push(await fetch('/api/stripe/checkout', { method:'POST', body: JSON.stringify({ tier: selectedTier }) }).then(r=>r.json()).then(d=>d.url))
-            */}
-            <button onClick={() => { setShowUpgradeModal(false); toast('Payment integration coming soon!', { icon: '💳' }) }}
-              className="btn-primary w-full py-3 rounded-[10px] text-[14px]">
-              {selectedTier === 'free' ? 'Stay on Free' : `Start Trial — ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} →`}
-            </button>
-          </div>
+      <dialog ref={upgradeDialogRef} className="p-8 max-w-[440px]"
+        onClick={e => { if (e.target === upgradeDialogRef.current) setShowUpgradeModal(false) }}
+        onCancel={() => setShowUpgradeModal(false)}>
+        <h3 className="text-[22px] font-extrabold tracking-tight mb-2">🚀 Unlock More Power</h3>
+        <p className="text-[12px] text-[#777] mb-5">Upgrade to access deeper analysis, live market data, macro intelligence, and more.</p>
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {(['premium', 'platinum', 'diamond', 'free'] as Tier[]).map(t => {
+            const prices: Record<Tier, string> = { free: '$0', premium: '$19.99', platinum: '$49.99', diamond: '$149.99' }
+            return (
+              <button key={t} onClick={() => setSelectedTier(t)}
+                className={`p-3 border-2 rounded-[10px] text-center transition-all
+                  ${selectedTier === t ? 'border-[var(--green)]' : 'border-[var(--border)]'}`}>
+                <div className="text-[18px] mb-1">{TIER_ICONS[t]}</div>
+                <div className="text-[9px] font-mono-tv font-bold tracking-wider" style={{ color: TIER_TEXT[t] }}>{t.toUpperCase()}</div>
+                <div className="text-[15px] font-extrabold" style={{ color: TIER_TEXT[t] }}>{prices[t]}</div>
+              </button>
+            )
+          })}
         </div>
-      )}
+        {/* TODO: Stripe — see layout comments */}
+        <button onClick={() => { setShowUpgradeModal(false); toast('Payment integration coming soon!', { icon: '💳' }) }}
+          className="btn-primary w-full py-3 rounded-[10px] text-[14px]">
+          {selectedTier === 'free' ? 'Stay on Free' : `Start Trial — ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} →`}
+        </button>
+      </dialog>
     </div>
   )
 }

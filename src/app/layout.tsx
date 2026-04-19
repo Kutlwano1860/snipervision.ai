@@ -21,14 +21,25 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" data-theme="dark">
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        {/* Restore theme from localStorage before first paint — prevents flash */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            var s = localStorage.getItem('tradevision-store');
+            if (s) {
+              var t = JSON.parse(s);
+              var theme = t?.state?.appearance?.theme;
+              if (theme) document.documentElement.setAttribute('data-theme', theme);
+            }
+          } catch(e) {}
+        `}} />
       </head>
-      <body className={`${inter.className} bg-[#080808] text-white antialiased`}>
+      <body className={`${inter.className} antialiased`}>
         {children}
         <Toaster
           position="bottom-center"

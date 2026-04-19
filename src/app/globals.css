@@ -19,6 +19,38 @@
   --purple: #a78bfa;
 }
 
+/* ── Light Mode ── */
+[data-theme="light"] {
+  --bg: #f0f2f5;
+  --bg2: #e8eaed;
+  --surface: #ffffff;
+  --surface2: #f5f6f8;
+  --surface3: #eef0f2;
+  --border: rgba(0,0,0,0.09);
+  --border2: rgba(0,0,0,0.15);
+  --green: #16a34a;
+  --green-dim: rgba(22,163,74,0.10);
+  --green-border: rgba(22,163,74,0.22);
+  --red: #dc2626;
+  --amber: #d97706;
+  --blue: #2563eb;
+  --purple: #7c3aed;
+}
+[data-theme="light"] body {
+  background: #f0f2f5 !important;
+  color: #111111 !important;
+}
+/* All hardcoded hex text classes → dark in light mode */
+[data-theme="light"] [class~="text-white"],
+[data-theme="light"] [class*="text-[#"] { color: #111111 !important; }
+/* Nav bar — override hardcoded dark inline bg */
+[data-theme="light"] .tv-nav { background: rgba(240,242,245,0.96) !important; }
+[data-theme="light"] .tv-input { background: var(--surface) !important; color: #111 !important; }
+[data-theme="light"] .tv-input::placeholder { color: #bbb; }
+[data-theme="light"] .tv-select { background: var(--surface) !important; color: #111 !important; }
+[data-theme="light"] ::-webkit-scrollbar-track { background: var(--bg); }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: #ccc; }
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -79,6 +111,30 @@ body {
 .conf-ring-fill {
   transition: stroke-dashoffset 0.9s ease;
 }
+
+/* ── Native <dialog> ── */
+dialog {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  padding: 0;
+  color: inherit;
+  outline: none;
+  max-width: min(90vw, 520px);
+  width: 100%;
+  max-height: 92dvh;
+  overflow-y: auto;
+}
+dialog::backdrop {
+  background: rgba(8,8,8,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+[data-theme="light"] dialog::backdrop {
+  background: rgba(200,205,215,0.72);
+}
+dialog[open] { animation: fadeUp 0.22s ease both; }
+dialog:focus { outline: none; }
 
 /* Form inputs */
 .tv-input {

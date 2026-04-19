@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { createClient } from '@/lib/supabase/client'
-import { useAppStore, type AccentColor } from '@/lib/store'
-import { CURRENCIES, TIER_ICONS, PLANS } from '@/lib/constants'
+import { useAppStore } from '@/lib/store'
+import { CURRENCIES, TIER_ICONS } from '@/lib/constants'
+import { BADGES } from '../_components/BadgeSystem'
 import type { Tier } from '@/types'
 
 // ─── Types ─────────────────────────────────────
-type Section = 'profile' | 'accounts' | 'account' | 'ai' | 'appearance' | 'stats' | 'security' | 'billing' | 'danger'
+type Section = 'profile' | 'accounts' | 'account' | 'ai' | 'appearance' | 'stats' | 'achievements' | 'security' | 'billing' | 'danger'
 
 interface TradingAccount {
   id: string
@@ -29,8 +30,9 @@ const SECTIONS: { id: Section; label: string; icon: string; minTier?: Tier }[] =
   { id: 'account',   label: 'Risk & Limits', icon: '💰', minTier: 'premium' },
   { id: 'ai',        label: 'AI & Trading',  icon: '🤖' },
   { id: 'appearance',label: 'Appearance',    icon: '🎨' },
-  { id: 'stats',     label: 'My Stats',      icon: '📊' },
-  { id: 'security',  label: 'Security',      icon: '🔐' },
+  { id: 'stats',        label: 'My Stats',      icon: '📊' },
+  { id: 'achievements', label: 'Achievements',  icon: '🏅' },
+  { id: 'security',     label: 'Security',      icon: '🔐' },
   { id: 'billing',   label: 'Billing',       icon: '💳' },
   { id: 'danger',    label: 'Danger Zone',   icon: '⚠️' },
 ]
@@ -41,19 +43,21 @@ const TIER_TEXT: Record<Tier, string> = {
 }
 const ACC_TYPES = ['micro','standard','pro','prop','funded','cent']
 const LEVERAGE_OPTIONS = ['1:10','1:20','1:30','1:50','1:100','1:200','1:300','1:400','1:500']
-const ACCENT_OPTIONS: { id: AccentColor; label: string; hex: string }[] = [
-  { id: 'green',  label: 'Electric Green', hex: '#22c55e' },
-  { id: 'blue',   label: 'Royal Blue',     hex: '#3b82f6' },
-  { id: 'purple', label: 'Deep Purple',    hex: '#a855f7' },
-  { id: 'amber',  label: 'Amber Gold',     hex: '#f59e0b' },
-  { id: 'red',    label: 'Coral Red',      hex: '#ef4444' },
-]
-const TIMEZONES = [
+
+const BASE_TIMEZONES = [
   'Africa/Johannesburg','Africa/Lagos','Africa/Nairobi','Africa/Cairo',
   'Europe/London','Europe/Paris','Europe/Berlin',
   'America/New_York','America/Chicago','America/Los_Angeles',
   'Asia/Dubai','Asia/Singapore','Asia/Tokyo','Australia/Sydney','Pacific/Auckland',
 ]
+function getDeviceTimezone(): string {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone } catch { return '' }
+}
+function buildTimezoneList(current: string): string[] {
+  const tz = getDeviceTimezone()
+  const extra = [tz, current].filter(t => t && !BASE_TIMEZONES.includes(t))
+  return [...BASE_TIMEZONES, ...extra]
+}
 const COUNTRIES = [
   'South Africa','Nigeria','Kenya','Ghana','Egypt','Morocco',
   'United Kingdom','Germany','France','Netherlands','Spain',
@@ -100,6 +104,74 @@ function GatedFeature({ locked, label, children }: { locked: boolean; label: str
   )
 }
 
+function AchievementsSection({ userId }: { userId?: string }) {
+  const supabase = createClient()
+  const [earned, setEarned] = useState<{ badge_id: string; earned_at: string }[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!userId) { setLoading(false); return }
+    supabase.from('user_badges').select('badge_id,earned_at').eq('user_id', userId)
+      .then(({ data }) => { setEarned(data || []); setLoading(false) })
+  }, [userId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const earnedSet = new Set(earned.map(e => e.badge_id))
+  const earnedMap = Object.fromEntries(earned.map(e => [e.badge_id, e.earned_at]))
+
+  const categories: { id: string; label: string; icon: string }[] = [
+    { id: 'challenge',   label: 'Challenge',   icon: '⚔️' },
+    { id: 'performance', label: 'Performance', icon: '📊' },
+    { id: 'prop',        label: 'Prop Firm',   icon: '🏢' },
+    { id: 'platform',    label: 'Platform',    icon: '🌟' },
+  ]
+
+  return (
+    <SectionCard title="Achievements" icon="🏅">
+      {loading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="w-6 h-6 border-2 border-[var(--green)] border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <div className="space-y-5">
+          <div className="text-[10px] text-[#555]">
+            {earned.length} / {BADGES.length} badges earned · Keep trading to unlock more
+          </div>
+          {categories.map(cat => (
+            <div key={cat.id}>
+              <div className="text-[9px] font-mono-tv font-bold tracking-widest text-[#777] mb-2.5 flex items-center gap-1.5">
+                {cat.icon} {cat.label.toUpperCase()} BADGES
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                {BADGES.filter(b => b.category === cat.id).map(badge => {
+                  const isEarned = earnedSet.has(badge.id)
+                  const date = earnedMap[badge.id]
+                  return (
+                    <div key={badge.id}
+                      className={`rounded-[10px] border p-3 text-center transition-all
+                        ${isEarned
+                          ? 'border-[rgba(34,197,94,0.3)] bg-[rgba(34,197,94,0.07)]'
+                          : 'border-[var(--border)] bg-[var(--surface2)] opacity-40'}`}>
+                      <div className="text-[22px] mb-1">{badge.icon}</div>
+                      <div className="text-[10px] font-bold text-white leading-tight mb-0.5">{badge.name}</div>
+                      <div className="text-[8px] text-[#555] leading-tight mb-1">{badge.description}</div>
+                      {isEarned && date && (
+                        <div className="text-[7px] font-mono-tv text-[var(--green)]">
+                          {new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </div>
+                      )}
+                      {!isEarned && <div className="text-[7px] font-mono-tv text-[#444]">Locked</div>}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </SectionCard>
+  )
+}
+
 function SaveBar({ onSave, saving, dirty }: { onSave: () => void; saving: boolean; dirty: boolean }) {
   if (!dirty) return null
   return (
@@ -123,7 +195,6 @@ export default function SettingsPage() {
 
   const tier    = (profile?.tier || 'free') as Tier
   const isPrem  = TIER_RANK[tier] >= TIER_RANK['premium']
-  const isPlat  = TIER_RANK[tier] >= TIER_RANK['platinum']
 
   const [activeSection, setActiveSection] = useState<Section>('profile')
   const [saving, setSaving]  = useState(false)
@@ -162,22 +233,55 @@ export default function SettingsPage() {
   // ── Danger ──
   const [deleteConfirm, setDeleteConfirm]     = useState('')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const deleteDialogRef = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    if (showDeleteModal) deleteDialogRef.current?.showModal()
+    else deleteDialogRef.current?.close()
+  }, [showDeleteModal])
   const [dangerLoading, setDangerLoading]     = useState(false)
 
-  // Sync profile → fields
+  // Sync profile → fields; auto-detect timezone if not set
   useEffect(() => {
     if (!profile) return
     setName(profile.name || '')
     setHandle((profile as any).trading_handle || '')
     setMotto((profile as any).trading_motto || '')
     setCountry((profile as any).country || '')
-    setTimezone((profile as any).timezone || '')
+    const savedTz = (profile as any).timezone || ''
+    const deviceTz = getDeviceTimezone()
+    if (!savedTz && deviceTz) {
+      // First time: auto-fill + save silently
+      setTimezone(deviceTz)
+      supabase.from('profiles').update({ timezone: deviceTz }).eq('id', profile.id).then(() => {
+        toast.success(`Timezone auto-set to ${deviceTz}`)
+      })
+    } else {
+      setTimezone(savedTz)
+    }
     setExpLevel((profile as any).experience_level || '')
     setRiskPct((profile as any).risk_per_trade ?? 1.0)
     setMaxDDraw((profile as any).max_daily_drawdown ?? '')
     setLeverage((profile as any).leverage || '1:100')
     setPropFirm((profile as any).prop_firm_name || '')
-  }, [profile])
+  }, [profile]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-sync timezone when user switches location/device timezone
+  useEffect(() => {
+    if (!profile) return
+    function syncTimezone() {
+      const deviceTz = getDeviceTimezone()
+      if (!deviceTz) return
+      const savedTz  = (profile as any).timezone || ''
+      if (deviceTz !== savedTz) {
+        setTimezone(deviceTz)
+        supabase.from('profiles').update({ timezone: deviceTz }).eq('id', profile!.id).then(() => {
+          toast.success(`Timezone synced to ${deviceTz}`, { icon: '🌍' })
+        })
+      }
+    }
+    document.addEventListener('visibilitychange', syncTimezone)
+    return () => document.removeEventListener('visibilitychange', syncTimezone)
+  }, [profile]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load trading accounts
   useEffect(() => {
@@ -383,11 +487,12 @@ export default function SettingsPage() {
 
   // ── Account form modal ──
   function AccountForm() {
+    const accDialogRef = useRef<HTMLDialogElement>(null)
+    useEffect(() => { accDialogRef.current?.showModal() }, [])
     return (
-      <div className="fixed inset-0 bg-[rgba(8,8,8,0.9)] z-50 flex items-center justify-center backdrop-blur-lg p-4"
-        onClick={() => setEditingAccId(null)}>
-        <div className="bg-[var(--surface)] border border-[var(--border2)] rounded-[18px] p-6 w-full max-w-[400px] animate-fade-up space-y-4"
-          onClick={e => e.stopPropagation()}>
+      <dialog ref={accDialogRef} className="p-6 max-w-[400px] space-y-4"
+        onClick={e => { if (e.target === accDialogRef.current) setEditingAccId(null) }}
+        onCancel={() => setEditingAccId(null)}>
           <div className="flex items-center justify-between">
             <h3 className="text-[15px] font-extrabold">{editingAccId === 'new' ? '+ Add Account' : 'Edit Account'}</h3>
             <button onClick={() => setEditingAccId(null)} className="text-[#555] hover:text-white text-[13px]">✕</button>
@@ -444,8 +549,7 @@ export default function SettingsPage() {
               {accSaving ? 'Saving...' : 'Save Account'}
             </button>
           </div>
-        </div>
-      </div>
+      </dialog>
     )
   }
 
@@ -522,10 +626,21 @@ export default function SettingsPage() {
                   </select>
                 </Field>
                 <Field label="TIMEZONE">
-                  <select className="tv-select" value={timezone} onChange={e => { setTimezone(e.target.value); markDirty() }}>
-                    <option value="">Select timezone</option>
-                    {TIMEZONES.map(t => <option key={t}>{t}</option>)}
-                  </select>
+                  <div className="flex gap-2 items-center">
+                    <select className="tv-select flex-1" value={timezone} onChange={e => { setTimezone(e.target.value); markDirty() }}>
+                      <option value="">Select timezone</option>
+                      {buildTimezoneList(timezone).map(t => <option key={t}>{t}</option>)}
+                    </select>
+                    <button
+                      type="button"
+                      title="Sync timezone from this device"
+                      onClick={() => {
+                        const tz = getDeviceTimezone()
+                        if (tz) { setTimezone(tz); markDirty(); toast.success(`Timezone set to ${tz}`, { icon: '🌍' }) }
+                      }}
+                      className="flex-shrink-0 px-2.5 py-2 rounded-[8px] border border-[var(--border2)] text-[#777] hover:text-white hover:border-[var(--green)] transition-all text-[13px]"
+                    >🌍</button>
+                  </div>
                 </Field>
               </div>
               <Field label="TRADING EXPERIENCE LEVEL" hint="Shown on community posts · personalises AI tone">
@@ -767,50 +882,24 @@ export default function SettingsPage() {
           {/* ════ APPEARANCE ════ */}
           {activeSection === 'appearance' && (
             <SectionCard title="Appearance" icon="🎨">
-              {/* Accent color — Premium+ */}
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="text-[10px] font-bold text-[#777] tracking-widest font-mono-tv">ACCENT COLOR</div>
-                  {!isPrem && <span className="text-[8px] font-bold text-[#a855f7] bg-[rgba(168,85,247,0.12)] border border-[rgba(168,85,247,0.3)] px-1.5 py-0.5 rounded-full">PRO+</span>}
-                </div>
-                <GatedFeature locked={!isPrem} label="Upgrade to Premium to customise accent colour">
-                  <div className="grid grid-cols-5 gap-2">
-                    {ACCENT_OPTIONS.map(a => (
-                      <button key={a.id} onClick={() => isPrem && updateAppearance({ accentColor: a.id })}
-                        className={`flex flex-col items-center gap-2 py-3 border rounded-[10px] transition-all
-                          ${appearance.accentColor === a.id ? 'border-white bg-[var(--surface3)]' : 'border-[var(--border2)] hover:bg-[var(--surface2)]'}`}>
-                        <div className="w-6 h-6 rounded-full" style={{ background: a.hex }} />
-                        <span className="text-[9px] text-[#888] text-center leading-tight">{a.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </GatedFeature>
-              </div>
-
-              <Field label="FONT SIZE">
-                <div className="grid grid-cols-3 gap-2">
-                  {(['small','default','large'] as const).map(f => (
-                    <button key={f} onClick={() => updateAppearance({ fontSize: f })}
-                      className={`py-2.5 border rounded-[8px] font-bold transition-all
-                        ${appearance.fontSize === f ? 'border-[var(--green)] bg-[var(--green-dim)] text-[var(--green)]' : 'border-[var(--border2)] text-[#777] hover:bg-[var(--surface2)]'}`}
-                      style={{ fontSize: f === 'small' ? 10 : f === 'default' ? 12 : 14 }}>
-                      {f === 'small' ? 'A Small' : f === 'default' ? 'A Default' : 'A Large'}
+              <Field label="THEME">
+                <div className="grid grid-cols-2 gap-3">
+                  {([
+                    { id: 'dark',  label: 'Dark',  icon: '🌙', desc: 'Easy on the eyes' },
+                    { id: 'light', label: 'Light', icon: '☀️', desc: 'Bright & clean' },
+                  ] as const).map(t => (
+                    <button key={t.id} onClick={() => updateAppearance({ theme: t.id })}
+                      className={`flex flex-col items-center gap-2 py-5 border rounded-[12px] transition-all
+                        ${appearance.theme === t.id
+                          ? 'border-[var(--green)] bg-[var(--green-dim)]'
+                          : 'border-[var(--border2)] hover:bg-[var(--surface2)]'}`}>
+                      <span className="text-[26px]">{t.icon}</span>
+                      <div className="text-[12px] font-bold text-white">{t.label}</div>
+                      <div className="text-[9px] text-[#666]">{t.desc}</div>
                     </button>
                   ))}
                 </div>
               </Field>
-
-              <div className="flex items-center justify-between bg-[var(--surface2)] border border-[var(--border)] rounded-[9px] px-4 py-3">
-                <div>
-                  <div className="text-[12px] font-semibold text-white">Compact Layout</div>
-                  <div className="text-[10px] text-[#555] mt-0.5">Denser panels — great for mobile</div>
-                </div>
-                <button onClick={() => updateAppearance({ compactMode: !appearance.compactMode })}
-                  className={`rounded-full transition-all relative flex-shrink-0 ml-4 ${appearance.compactMode ? 'bg-[var(--green)]' : 'bg-[var(--border2)]'}`}
-                  style={{ width: 40, height: 22 }}>
-                  <span className="absolute top-0.5 rounded-full bg-white shadow transition-all" style={{ width: 18, height: 18, left: appearance.compactMode ? 20 : 2 }} />
-                </button>
-              </div>
             </SectionCard>
           )}
 
@@ -869,6 +958,11 @@ export default function SettingsPage() {
                 </>
               )}
             </SectionCard>
+          )}
+
+          {/* ════ ACHIEVEMENTS ════ */}
+          {activeSection === 'achievements' && (
+            <AchievementsSection userId={profile?.id} />
           )}
 
           {/* ════ SECURITY ════ */}
@@ -990,33 +1084,29 @@ export default function SettingsPage() {
       {editingAccId !== null && <AccountForm />}
 
       {/* Delete account modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-[rgba(8,8,8,0.92)] z-50 flex items-center justify-center backdrop-blur-lg p-4"
-          onClick={() => setShowDeleteModal(false)}>
-          <div className="bg-[var(--surface)] border border-[rgba(239,68,68,0.5)] rounded-[18px] p-8 max-w-[420px] w-full animate-fade-up"
-            onClick={e => e.stopPropagation()}>
-            <div className="text-[36px] mb-3 text-center">🗑️</div>
-            <h3 className="text-[20px] font-extrabold text-[var(--red)] text-center mb-2">Delete Account</h3>
-            <p className="text-[12px] text-[#777] text-center mb-6 leading-relaxed">
-              This removes everything — profile, journal ({stats?.totalTrades || 0} trades), all analyses, and {accounts.length} trading account(s).
-              <strong className="text-white block mt-1">Irreversible.</strong>
-            </p>
-            <div className="mb-5">
-              <div className="text-[10px] font-bold text-[#777] tracking-widest font-mono-tv mb-1.5">TYPE "DELETE" TO CONFIRM</div>
-              <input className="tv-input text-center font-mono-tv text-[var(--red)] font-bold tracking-widest"
-                value={deleteConfirm} onChange={e => setDeleteConfirm(e.target.value.toUpperCase())} placeholder="DELETE" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => { setShowDeleteModal(false); setDeleteConfirm('') }}
-                className="py-3 border border-[var(--border2)] rounded-[9px] text-[12px] font-bold text-[#777] hover:bg-[var(--surface2)] transition-all">Cancel</button>
-              <button onClick={deleteAccount_full} disabled={deleteConfirm !== 'DELETE' || dangerLoading}
-                className="py-3 rounded-[9px] text-[12px] font-bold bg-[var(--red)] text-white hover:bg-[#dc2626] transition-all disabled:opacity-40">
-                {dangerLoading ? 'Deleting...' : 'Delete Forever'}
-              </button>
-            </div>
-          </div>
+      <dialog ref={deleteDialogRef} className="p-8 max-w-[420px]" style={{ borderColor: 'rgba(239,68,68,0.5)' }}
+        onClick={e => { if (e.target === deleteDialogRef.current) { setShowDeleteModal(false); setDeleteConfirm('') } }}
+        onCancel={() => { setShowDeleteModal(false); setDeleteConfirm('') }}>
+        <div className="text-[36px] mb-3 text-center">🗑️</div>
+        <h3 className="text-[20px] font-extrabold text-[var(--red)] text-center mb-2">Delete Account</h3>
+        <p className="text-[12px] text-[#777] text-center mb-6 leading-relaxed">
+          This removes everything — profile, journal ({stats?.totalTrades || 0} trades), all analyses, and {accounts.length} trading account(s).
+          <strong className="text-white block mt-1">Irreversible.</strong>
+        </p>
+        <div className="mb-5">
+          <div className="text-[10px] font-bold text-[#777] tracking-widest font-mono-tv mb-1.5">TYPE "DELETE" TO CONFIRM</div>
+          <input className="tv-input text-center font-mono-tv text-[var(--red)] font-bold tracking-widest"
+            value={deleteConfirm} onChange={e => setDeleteConfirm(e.target.value.toUpperCase())} placeholder="DELETE" />
         </div>
-      )}
+        <div className="grid grid-cols-2 gap-3">
+          <button onClick={() => { setShowDeleteModal(false); setDeleteConfirm('') }}
+            className="py-3 border border-[var(--border2)] rounded-[9px] text-[12px] font-bold text-[#777] hover:bg-[var(--surface2)] transition-all">Cancel</button>
+          <button onClick={deleteAccount_full} disabled={deleteConfirm !== 'DELETE' || dangerLoading}
+            className="py-3 rounded-[9px] text-[12px] font-bold bg-[var(--red)] text-white hover:bg-[#dc2626] transition-all disabled:opacity-40">
+            {dangerLoading ? 'Deleting...' : 'Delete Forever'}
+          </button>
+        </div>
+      </dialog>
     </div>
   )
 }

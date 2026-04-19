@@ -80,6 +80,12 @@ export default function WatchlistPage() {
   const [catalogue, setCatalogue]     = useState<string[]>([])
   const [showAdd, setShowAdd]         = useState(false)
   const [addSearch, setAddSearch]     = useState('')
+  const addDialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    if (showAdd) addDialogRef.current?.showModal()
+    else addDialogRef.current?.close()
+  }, [showAdd])
 
   // Load persisted extras on mount
   useEffect(() => { setExtraPairs(loadExtras()) }, [])
@@ -236,11 +242,9 @@ export default function WatchlistPage() {
       </div>
 
       {/* Add Asset Modal */}
-      {showAdd && (
-        <div className="fixed inset-0 bg-[rgba(8,8,8,0.9)] z-50 flex items-center justify-center backdrop-blur-lg p-4"
-          onClick={() => { setShowAdd(false); setAddSearch('') }}>
-          <div className="bg-[var(--surface)] border border-[var(--border2)] rounded-[18px] p-6 w-full max-w-[440px] animate-fade-up"
-            onClick={e => e.stopPropagation()}>
+      <dialog ref={addDialogRef} className="p-6 max-w-[440px]"
+        onClick={e => { if (e.target === addDialogRef.current) { setShowAdd(false); setAddSearch('') } }}
+        onCancel={() => { setShowAdd(false); setAddSearch('') }}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[16px] font-extrabold">Add Asset to Watchlist</h3>
               <button onClick={() => { setShowAdd(false); setAddSearch('') }}
@@ -280,9 +284,7 @@ export default function WatchlistPage() {
             <p className="text-[9px] text-[#555] mt-3 font-mono-tv text-center">
               Custom pairs are saved in your browser. Data updates every 30s.
             </p>
-          </div>
-        </div>
-      )}
+      </dialog>
     </div>
   )
 }

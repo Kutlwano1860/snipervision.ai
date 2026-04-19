@@ -30,6 +30,8 @@ export type Strategy =
 
 export type TradingStyle = 'Scalper' | 'Day Trader' | 'Swing Trader'
 
+export type TradingMode = 'normal' | 'prop' | 'challenge'
+
 export type Session =
   | 'Auto Detect' | 'London' | 'New York'
   | 'Asian' | 'London/NY Overlap'

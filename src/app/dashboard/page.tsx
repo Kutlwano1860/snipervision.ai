@@ -7,6 +7,8 @@ import { useAppStore } from '@/lib/store'
 import { CURRENCIES, TIER_LIMITS } from '@/lib/constants'
 import { createClient } from '@/lib/supabase/client'
 import type { AnalysisResult, Tier, AccountType, MarketType, Strategy, Session, TradingStyle } from '@/types'
+import ChallengeWidget from './_components/ChallengeWidget'
+import PropFirmWidget from './_components/PropFirmWidget'
 
 // ── AI Market Summary Widget ──
 interface MarketSummary {
@@ -902,7 +904,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const { profile, settings, updateSettings, sessionTradingCurrency,
           currentAnalysis, setCurrentAnalysis, isAnalysing, setIsAnalysing,
-          dailyUsed, setDailyUsed } = useAppStore()
+          dailyUsed, setDailyUsed, activeMode } = useAppStore()
 
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -1095,6 +1097,8 @@ export default function DashboardPage() {
       <LoadingOverlay show={isAnalysing} currentStep={streamStep} />
 
       <div className="p-4 md:p-6 max-w-[1200px] mx-auto">
+        <ChallengeWidget />
+        <PropFirmWidget />
         <KillZoneWidget />
         <MarketSummaryWidget />
 

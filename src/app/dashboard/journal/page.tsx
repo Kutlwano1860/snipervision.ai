@@ -1,19 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/lib/store'
 import { getCurrency } from '@/lib/constants'
 import toast from 'react-hot-toast'
+import { checkAndAwardBadges, BADGES } from '../_components/BadgeSystem'
+
+const RecapModal = lazy(() => import('../_components/RecapModal'))
+
+const MODE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
+  normal:    { label: 'Normal',    icon: '📊', color: '#6b7280' },
+  prop:      { label: 'Prop Firm', icon: '🏢', color: '#3b82f6' },
+  challenge: { label: 'Challenge', icon: '⚔️', color: '#f59e0b' },
+}
 
 export default function JournalPage() {
-  const { profile } = useAppStore()
+  const { profile, activeMode } = useAppStore()
   const [entries, setEntries] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [exitPrice, setExitPrice] = useState('')
   const [pnlInput, setPnlInput] = useState('')
+  const [showRecap, setShowRecap] = useState(false)
   const supabase = createClient()
   const homeCurrency = profile?.home_currency || 'ZAR'
   const homeConfig = getCurrency(homeCurrency as any)
@@ -21,22 +31,23 @@ export default function JournalPage() {
   async function load() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { data } = await supabase
+    const q = supabase
       .from('journal_entries')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(50)
+      .limit(100)
+    const { data } = await q
     setEntries(data || [])
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [activeMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function updateOutcome(id: string, outcome: 'win' | 'loss' | 'breakeven' | 'live' | 'skipped', taken: boolean) {
     setSavingId(id)
     const pnl = outcome === 'breakeven' ? 0 : pnlInput !== '' ? parseFloat(pnlInput) : null
-    const updates: Record<string, unknown> = { outcome, taken_trade: taken }
+    const updates: Record<string, unknown> = { outcome, taken_trade: taken, mode: activeMode }
     if (exitPrice !== '') updates.exit_price = exitPrice
     if (pnl !== null) updates.pnl_home_currency = pnl
     const { error } = await supabase
@@ -48,8 +59,16 @@ export default function JournalPage() {
     } else {
       toast.success(taken ? `Recorded as ${outcome}` : 'Marked as skipped')
       setEntries(prev => prev.map(e => e.id === id
-        ? { ...e, outcome, taken_trade: taken, exit_price: exitPrice || e.exit_price, pnl_home_currency: pnl ?? e.pnl_home_currency }
+        ? { ...e, outcome, taken_trade: taken, exit_price: exitPrice || e.exit_price, pnl_home_currency: pnl ?? e.pnl_home_currency, mode: activeMode }
         : e))
+      // Check + award badges after every outcome save
+      if (profile && (outcome === 'win' || outcome === 'loss')) {
+        const newBadges = await checkAndAwardBadges(profile.id, supabase)
+        newBadges.forEach(id => {
+          const badge = BADGES.find(b => b.id === id)
+          if (badge) toast.success(`${badge.icon} Badge unlocked: ${badge.name}!`, { duration: 4000 })
+        })
+      }
     }
     setSavingId(null)
     setEditingId(null)
@@ -73,14 +92,20 @@ export default function JournalPage() {
     setEntries(prev => prev.filter(e => e.id !== id))
   }
 
-  const wins    = entries.filter(e => e.outcome === 'win').length
-  const losses  = entries.filter(e => e.outcome === 'loss').length
-  const live    = entries.filter(e => e.outcome === 'live').length
+  const displayEntries = entries.filter(e =>
+    activeMode === 'normal'
+      ? (!e.mode || e.mode === 'normal')
+      : e.mode === activeMode
+  )
+
+  const wins    = displayEntries.filter(e => e.outcome === 'win').length
+  const losses  = displayEntries.filter(e => e.outcome === 'loss').length
+  const live    = displayEntries.filter(e => e.outcome === 'live').length
   const total   = wins + losses
   const winRate = total > 0 ? ((wins / total) * 100).toFixed(1) : '—'
-  const totalPnl = entries.reduce((sum, e) => sum + (e.pnl_home_currency || 0), 0)
+  const totalPnl = displayEntries.reduce((sum, e) => sum + (e.pnl_home_currency || 0), 0)
 
-  const strategyStats = entries.reduce<Record<string, { wins: number; losses: number }>>((acc, e) => {
+  const strategyStats = displayEntries.reduce<Record<string, { wins: number; losses: number }>>((acc, e) => {
     const key = e.strategy || 'Unknown'
     if (!acc[key]) acc[key] = { wins: 0, losses: 0 }
     if (e.outcome === 'win')  acc[key].wins++
@@ -111,11 +136,31 @@ export default function JournalPage() {
     URL.revokeObjectURL(url)
   }
 
+  // Mode-filtered entries view (show all but highlight current mode)
+  const modeInfo = MODE_LABELS[activeMode] || MODE_LABELS.normal
+
   return (
     <div className="p-4 md:p-6 max-w-[1200px] mx-auto">
+      {/* Recap modal */}
+      {showRecap && (
+        <Suspense fallback={null}>
+          <RecapModal onClose={() => setShowRecap(false)} />
+        </Suspense>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h2 className="text-[20px] font-extrabold tracking-tight">Trade Journal</h2>
+        <div className="flex items-center gap-2.5">
+          <h2 className="text-[20px] font-extrabold tracking-tight">Trade Journal</h2>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border font-mono-tv"
+            style={{ color: modeInfo.color, borderColor: modeInfo.color + '44', background: modeInfo.color + '18' }}>
+            {modeInfo.icon} {modeInfo.label}
+          </span>
+        </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => setShowRecap(true)}
+            className="btn-ghost-green text-[11px] px-3 py-2 rounded-lg">
+            📊 Recap
+          </button>
           <button onClick={load} disabled={loading}
             className="btn-ghost-green text-[11px] px-3 py-2 rounded-lg disabled:opacity-40">
             ↺ Refresh
@@ -171,13 +216,13 @@ export default function JournalPage() {
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-3">
-        {entries.length === 0 && !loading && (
+        {displayEntries.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center py-16 text-center bg-[var(--surface)] border border-[var(--border)] rounded-[12px]">
             <div className="text-[40px] opacity-20 mb-3">📒</div>
-            <p className="text-[13px] text-[#777]">No trades yet.</p>
+            <p className="text-[13px] text-[#777]">No trades in {modeInfo.label} mode yet.</p>
           </div>
         )}
-        {entries.map(e => {
+        {displayEntries.map(e => {
           const pnlColor = (e.pnl_home_currency || 0) >= 0 ? 'text-[var(--green)]' : 'text-[var(--red)]'
           return (
             <div key={e.id} className="bg-[var(--surface)] border border-[var(--border)] rounded-[12px] p-4">
@@ -258,14 +303,14 @@ export default function JournalPage() {
           ))}
         </div>
 
-        {entries.length === 0 && !loading && (
+        {displayEntries.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="text-[40px] opacity-20 mb-3">📒</div>
-            <p className="text-[13px] text-[#777]">No trades yet. Run your first analysis to get started.</p>
+            <p className="text-[13px] text-[#777]">No trades in {modeInfo.label} mode yet. Run your first analysis to get started.</p>
           </div>
         )}
 
-        {entries.map(e => (
+        {displayEntries.map(e => (
           <div key={e.id} className="border-b border-[var(--border)] last:border-0">
             {/* Main row */}
             <div className="grid grid-cols-[70px_100px_55px_1fr_80px_80px_90px_130px] px-5 py-3.5 hover:bg-[var(--surface2)] transition-colors items-center text-[11px]">
