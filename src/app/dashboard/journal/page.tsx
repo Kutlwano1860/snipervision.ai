@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/lib/store'
 import { getCurrency } from '@/lib/constants'
 import toast from 'react-hot-toast'
-import { checkAndAwardBadges, BADGES } from '../_components/BadgeSystem'
+import { checkAndAwardBadges, BADGES, type BadgeDef } from '../_components/BadgeSystem'
+import AchievementPopup from '../_components/AchievementPopup'
 
 const RecapModal = lazy(() => import('../_components/RecapModal'))
 
@@ -24,6 +25,7 @@ export default function JournalPage() {
   const [exitPrice, setExitPrice] = useState('')
   const [pnlInput, setPnlInput] = useState('')
   const [showRecap, setShowRecap] = useState(false)
+  const [badgeQueue, setBadgeQueue] = useState<BadgeDef[]>([])
   const supabase = createClient()
   const homeCurrency = profile?.home_currency || 'ZAR'
   const homeConfig = getCurrency(homeCurrency as any)
@@ -63,11 +65,9 @@ export default function JournalPage() {
         : e))
       // Check + award badges after every outcome save
       if (profile && (outcome === 'win' || outcome === 'loss')) {
-        const newBadges = await checkAndAwardBadges(profile.id, supabase)
-        newBadges.forEach(id => {
-          const badge = BADGES.find(b => b.id === id)
-          if (badge) toast.success(`${badge.icon} Badge unlocked: ${badge.name}!`, { duration: 4000 })
-        })
+        const newBadgeIds = await checkAndAwardBadges(profile.id, supabase)
+        const earned = newBadgeIds.map(id => BADGES.find(b => b.id === id)).filter(Boolean) as BadgeDef[]
+        if (earned.length > 0) setBadgeQueue(prev => [...prev, ...earned])
       }
     }
     setSavingId(null)
@@ -148,6 +148,15 @@ export default function JournalPage() {
         </Suspense>
       )}
 
+      {/* Achievement popup — shows queued badges one at a time */}
+      {badgeQueue.length > 0 && (
+        <AchievementPopup
+          key={badgeQueue[0].id}
+          badge={badgeQueue[0]}
+          onDismiss={() => setBadgeQueue(prev => prev.slice(1))}
+        />
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-2.5">
           <h2 className="text-[20px] font-extrabold tracking-tight">Trade Journal</h2>
@@ -157,6 +166,10 @@ export default function JournalPage() {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => setBadgeQueue(prev => [...prev, BADGES[Math.floor(Math.random() * BADGES.length)]])}
+            className="btn-ghost-green text-[11px] px-3 py-2 rounded-lg">
+            🏅 Badges
+          </button>
           <button onClick={() => setShowRecap(true)}
             className="btn-ghost-green text-[11px] px-3 py-2 rounded-lg">
             📊 Recap
